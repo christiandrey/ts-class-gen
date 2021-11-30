@@ -70,18 +70,20 @@ function emitClass(content: string, index = 0): EmittedClass {
         const entityProperties = entityClass.properties.map((property) =>
           getEntityProperty(property, typeEmitter)
         );
-        const importedTypes = entityProperties
-          .filter((o) => !o.isPrimitive && !o.isEnum)
-          .map((o) => o.type)
-          .concat(entityParents)
-          .sort();
+        const importedTypes = arrayUnique(
+          entityProperties
+            .filter((o) => !o.isPrimitive && !o.isEnum)
+            .map((o) => o.type)
+            .concat(entityParents)
+            .sort()
+        );
         const enumTypes = entityProperties.filter((o) => o.isEnum);
 
         if (enumTypes.length) {
           typescriptEmitter.writeLine(
-            `import {${enumTypes
-              .map((o) => o.type)
-              .join(", ")}} from '../typings';`
+            `import {${arrayUnique(enumTypes.map((o) => o.type)).join(
+              ", "
+            )}} from '../typings';`
           );
         }
 

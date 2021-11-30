@@ -35,7 +35,7 @@ namespace HealthGyro.Models.Dtos
    {
       public TimeDuration TimeDuration { get; set; }
       public DateTime StartDate { get; set; }
-      public List<PlotPoint> PreviousValues { get; set; }
-      public List<PlotPoint> CurrentValues { get; set; }
+      public List<PlotPointDto> PreviousValues { get; set; }
+      public List<PlotPointDto> CurrentValues { get; set; }
    }
 }
