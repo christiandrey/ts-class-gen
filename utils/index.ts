@@ -48,6 +48,10 @@ export function isEnum(type: string): boolean {
   return !childType.endsWith("Dto");
 }
 
+export function isOptionsDto(type: string): boolean {
+  return type.includes("Options");
+}
+
 export function extractChildType(type: string): string {
   if (!type.includes("Array")) {
     return type;

@@ -1,8 +1,9 @@
-import { EmittedContent, parser } from "./parser";
+import { EmittedClass, EmittedDto, parser } from "./parser";
 import {
   arrayUnique,
   createDirAsync,
   createFileAsync,
+  isOptionsDto,
   pathExistsAsync,
   readDirAsync,
   readFileAsync,
@@ -23,14 +24,24 @@ async function run() {
   await removeDirAsync(ENTITIES_FOLDER);
   await removeDirAsync(TYPINGS_FOLDER);
   await createDirAsync(ENTITIES_FOLDER);
+  await createDirAsync(TYPINGS_FOLDER);
 
-  const entities: Array<EmittedContent> = [];
+  const entities: Array<EmittedClass> = [];
+  const options: Array<EmittedDto> = [];
   const dtos = await readDirAsync(DTOS_FOLDER);
+  const classDtos = dtos.filter((o) => !isOptionsDto(o));
+  const optionsDtos = dtos.filter(isOptionsDto);
 
-  for (const dto of dtos) {
-    const content = await readFileAsync(join(DTOS_FOLDER, dto));
+  for (const classDto of classDtos) {
+    const content = await readFileAsync(join(DTOS_FOLDER, classDto));
     const parsed = parser.emitClasses(content);
     entities.push(...parsed);
+  }
+
+  for (const optionDto of optionsDtos) {
+    const content = await readFileAsync(join(DTOS_FOLDER, optionDto));
+    const parsed = parser.emitDto(content);
+    options.push(parsed);
   }
 
   for (const entity of entities) {
@@ -41,7 +52,33 @@ async function run() {
     );
   }
 
-  const enums = arrayUnique(entities.flatMap((o) => o.enums));
+  if (options.length) {
+    let content = "";
+
+    const entitiesImports = arrayUnique(
+      options.flatMap((o) => o.entitiesImports)
+    ).sort();
+    const typingsImports = arrayUnique(
+      options.flatMap((o) => o.typingsImports)
+    ).sort();
+
+    if (typingsImports.length) {
+      content += `import {${typingsImports.join(", ")}} from '.';\n`;
+    }
+
+    for (const entityImport of entitiesImports) {
+      content += `import {${entityImport}} from './${toKebabCase(
+        entityImport
+      )}';\n`;
+    }
+
+    content += "\n";
+    content += options.map((o) => o.emitted).join("\n\n");
+
+    await createFileAsync("dtos.d.ts", TYPINGS_FOLDER, content);
+  }
+
+  const enums = arrayUnique(entities.flatMap((o) => o.enums)).sort();
   const parsedEnums: Array<string> = [];
 
   for (const enumName of enums) {
@@ -56,7 +93,6 @@ async function run() {
   }
 
   if (parsedEnums.length) {
-    await createDirAsync(TYPINGS_FOLDER);
     await createFileAsync(
       "index.d.ts",
       TYPINGS_FOLDER,

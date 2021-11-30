@@ -1,4 +1,5 @@
 import {
+  CSharpProperty,
   Emitter,
   TypeEmitter,
 } from "@fluffy-spoon/csharp-to-typescript-generator";
@@ -15,17 +16,39 @@ import {
   toKebabCase,
 } from "../utils";
 
-export type EmittedContent = {
+export type EmittedClass = {
   name: string;
   emitted: string;
   enums: Array<string>;
+};
+
+export type EmittedDto = {
+  emitted: string;
+  entitiesImports: Array<string>;
+  typingsImports: Array<string>;
 };
 
 function getClassesLength(content: string): number {
   return content.match(/(public|private)\sclass/gim)?.length ?? 0;
 }
 
-function emitClass(content: string, index = 0): EmittedContent {
+function getEntityProperty(
+  { name, type }: CSharpProperty,
+  typeEmitter: TypeEmitter
+) {
+  const parsedType = typeEmitter.convertTypeToTypeScript(type);
+  return {
+    name: toCamelCase(name),
+    type: getTypescriptClassName(extractChildType(parsedType)),
+    arrayLevels: parsedType.match(/Array/g)?.length,
+    isArray: parsedType.startsWith("Array"),
+    isEnum: isEnum(parsedType),
+    isPrimitive: isPrimitive(extractChildType(parsedType)),
+    isNullable: type.isNullable,
+  } as ParsedPropertyType;
+}
+
+function emitClass(content: string, index = 0): EmittedClass {
   let name = "";
   const enums: Array<string> = [];
   const emitter = new Emitter(content);
@@ -36,25 +59,15 @@ function emitClass(content: string, index = 0): EmittedContent {
 
         const typeEmitter = new TypeEmitter(typescriptEmitter);
         const entityClass = file.getAllClassesRecursively()[index];
+        const entityInherits = !!entityClass.inheritsFrom.length;
         const entityParents = entityClass.inheritsFrom.map((o) =>
           getTypescriptClassName(o.name)
         );
         const entityClassName = (name = getTypescriptClassName(
           entityClass.name
         ));
-        const entityProperties = entityClass.properties.map(
-          ({ name, type }) => {
-            const parsedType = typeEmitter.convertTypeToTypeScript(type);
-            return {
-              name: toCamelCase(name),
-              type: getTypescriptClassName(extractChildType(parsedType)),
-              arrayLevels: parsedType.match(/Array/g)?.length,
-              isArray: parsedType.startsWith("Array"),
-              isEnum: isEnum(parsedType),
-              isPrimitive: isPrimitive(extractChildType(parsedType)),
-              isNullable: type.isNullable,
-            } as ParsedPropertyType;
-          }
+        const entityProperties = entityClass.properties.map((property) =>
+          getEntityProperty(property, typeEmitter)
         );
         const importedTypes = entityProperties
           .filter((o) => !o.isPrimitive && !o.isEnum)
@@ -62,7 +75,6 @@ function emitClass(content: string, index = 0): EmittedContent {
           .concat(entityParents)
           .sort();
         const enumTypes = entityProperties.filter((o) => o.isEnum);
-        const isBaseEntity = entityClassName === "BaseEntity";
 
         if (enumTypes.length) {
           typescriptEmitter.writeLine(
@@ -106,7 +118,7 @@ function emitClass(content: string, index = 0): EmittedContent {
         typescriptEmitter.ensureNewParagraph();
         typescriptEmitter.enterScope(`constructor(dto: ${entityClassName}) {`);
 
-        if (!isBaseEntity) {
+        if (entityInherits) {
           typescriptEmitter.writeIndentation();
           typescriptEmitter.writeLine(`super(dto);`);
           typescriptEmitter.ensureNewParagraph();
@@ -134,9 +146,9 @@ function emitClass(content: string, index = 0): EmittedContent {
   };
 }
 
-function emitClasses(content: string): Array<EmittedContent> {
+function emitClasses(content: string): Array<EmittedClass> {
   const length = getClassesLength(content);
-  const emitted: Array<EmittedContent> = [];
+  const emitted: Array<EmittedClass> = [];
 
   for (let i = 0; i < length; i++) {
     emitted.push(emitClass(content, i));
@@ -160,7 +172,61 @@ function emitEnum(content: string) {
   });
 }
 
+function emitDto(content: string): EmittedDto {
+  const entitiesImports: Array<string> = [];
+  const typingsImports: Array<string> = [];
+  const emitter = new Emitter(content);
+  const emitted = emitter.emit({
+    file: {
+      onBeforeEmit: (file, typescriptEmitter) => {
+        typescriptEmitter.clear();
+
+        const typeEmitter = new TypeEmitter(typescriptEmitter);
+        const entityClass = file.getAllClassesRecursively()[0];
+        const entityClassName = getTypescriptClassName(entityClass.name);
+        const entityProperties = entityClass.properties.map((property) =>
+          getEntityProperty(property, typeEmitter)
+        );
+        const importedTypes = entityProperties
+          .filter((o) => !o.isPrimitive && !o.isEnum)
+          .map((o) => o.type)
+          .sort();
+        const enumTypes = entityProperties
+          .filter((o) => o.isEnum)
+          .map((o) => o.type);
+
+        entitiesImports.push(...importedTypes);
+        typingsImports.push(...enumTypes);
+
+        typescriptEmitter.enterScope(`export type ${entityClassName} = {`);
+
+        for (const entityProperty of entityProperties) {
+          const { type, name, isNullable, isArray, isEnum, arrayLevels } =
+            entityProperty;
+          typescriptEmitter.writeIndentation();
+          typescriptEmitter.writeLine(
+            `${name}${isNullable ? "?" : ""}: ${getFullType(
+              type,
+              isArray,
+              arrayLevels
+            )};`
+          );
+        }
+
+        typescriptEmitter.leaveScope();
+      },
+    },
+  });
+
+  return {
+    emitted,
+    entitiesImports,
+    typingsImports,
+  };
+}
+
 export const parser = {
   emitClasses,
+  emitDto,
   emitEnum,
 };
