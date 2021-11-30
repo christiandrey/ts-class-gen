@@ -2,14 +2,9 @@
 
 namespace HealthGyro.Models.Dtos
 {
-   public class ChatDto : ChatLiteDto
+   public class ChatDto : BaseEntityDto
    {
       public List<UserLiteDto> Users { get; set; }
       public ChatMessageDto LastMessage { get; set; }
-   }
-
-   public class ChatLiteDto : BaseEntityDto
-   {
-      public TimeDuration TimeDuration { get; set; }
    }
 }

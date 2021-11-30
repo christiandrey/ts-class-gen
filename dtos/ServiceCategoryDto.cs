@@ -2,9 +2,9 @@ using System;
 
 namespace HealthGyro.Models.Dtos
 {
-   public class BaseEntityDto
+   public class ServiceCategoryDto
    {
       public Guid Id { get; set; }
-      public DateTime CreatedAt { get; set; }
+      public string Name { get; set; }
    }
 }
