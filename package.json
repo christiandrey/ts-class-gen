@@ -1,0 +1,18 @@
+{
+  "name": "ts-class-gen",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^16.11.10",
+    "ts-node": "^10.4.0",
+    "typescript": "^4.5.2"
+  },
+  "dependencies": {
+    "@fluffy-spoon/csharp-parser": "1.143.0",
+    "@fluffy-spoon/csharp-to-typescript-generator": "1.233.0"
+  },
+  "scripts": {
+    "start": "yarn ts-node index.ts"
+  }
+}
