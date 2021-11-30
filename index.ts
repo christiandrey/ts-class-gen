@@ -31,6 +31,7 @@ async function run() {
   const dtos = await readDirAsync(DTOS_FOLDER);
   const classDtos = dtos.filter((o) => !isOptionsDto(o));
   const optionsDtos = dtos.filter(isOptionsDto);
+  let entityExportContent = "";
 
   for (const classDto of classDtos) {
     const content = await readFileAsync(join(DTOS_FOLDER, classDto));
@@ -40,8 +41,8 @@ async function run() {
 
   for (const optionDto of optionsDtos) {
     const content = await readFileAsync(join(DTOS_FOLDER, optionDto));
-    const parsed = parser.emitDto(content);
-    options.push(parsed);
+    const parsed = parser.emitDtos(content);
+    options.push(...parsed);
   }
 
   for (const entity of entities) {
@@ -50,6 +51,17 @@ async function run() {
       ENTITIES_FOLDER,
       entity.emitted
     );
+
+    entityExportContent += `import {${entity.name}} from './${toKebabCase(
+      entity.name
+    )}';\n`;
+  }
+
+  if (entityExportContent.length) {
+    entityExportContent += "\n";
+    entityExportContent += `export {${entities.map((o) => o.name).join(",")}}`;
+
+    await createFileAsync("index.ts", ENTITIES_FOLDER, entityExportContent);
   }
 
   if (options.length) {
@@ -57,7 +69,9 @@ async function run() {
 
     const entitiesImports = arrayUnique(
       options.flatMap((o) => o.entitiesImports)
-    ).sort();
+    )
+      .filter((o) => !isOptionsDto(o))
+      .sort();
     const typingsImports = arrayUnique(
       options.flatMap((o) => o.typingsImports)
     ).sort();
@@ -78,7 +92,9 @@ async function run() {
     await createFileAsync("dtos.d.ts", TYPINGS_FOLDER, content);
   }
 
-  const enums = arrayUnique(entities.flatMap((o) => o.enums)).sort();
+  const enums = arrayUnique(
+    entities.flatMap((o) => o.enums).concat(options.flatMap((o) => o.enums))
+  ).sort();
   const parsedEnums: Array<string> = [];
 
   for (const enumName of enums) {

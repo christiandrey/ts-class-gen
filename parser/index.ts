@@ -24,6 +24,7 @@ export type EmittedClass = {
 
 export type EmittedDto = {
   emitted: string;
+  enums: Array<string>;
   entitiesImports: Array<string>;
   typingsImports: Array<string>;
 };
@@ -172,7 +173,8 @@ function emitEnum(content: string) {
   });
 }
 
-function emitDto(content: string): EmittedDto {
+function emitDto(content: string, index = 0): EmittedDto {
+  const enums: Array<string> = [];
   const entitiesImports: Array<string> = [];
   const typingsImports: Array<string> = [];
   const emitter = new Emitter(content);
@@ -182,7 +184,7 @@ function emitDto(content: string): EmittedDto {
         typescriptEmitter.clear();
 
         const typeEmitter = new TypeEmitter(typescriptEmitter);
-        const entityClass = file.getAllClassesRecursively()[0];
+        const entityClass = file.getAllClassesRecursively()[index];
         const entityClassName = getTypescriptClassName(entityClass.name);
         const entityProperties = entityClass.properties.map((property) =>
           getEntityProperty(property, typeEmitter)
@@ -211,6 +213,10 @@ function emitDto(content: string): EmittedDto {
               arrayLevels
             )};`
           );
+
+          if (isEnum) {
+            enums.push(type);
+          }
         }
 
         typescriptEmitter.leaveScope();
@@ -220,13 +226,25 @@ function emitDto(content: string): EmittedDto {
 
   return {
     emitted,
+    enums,
     entitiesImports,
     typingsImports,
   };
 }
 
+function emitDtos(content: string): Array<EmittedDto> {
+  const length = getClassesLength(content);
+  const emitted: Array<EmittedDto> = [];
+
+  for (let i = 0; i < length; i++) {
+    emitted.push(emitDto(content, i));
+  }
+
+  return emitted;
+}
+
 export const parser = {
   emitClasses,
-  emitDto,
+  emitDtos,
   emitEnum,
 };
