@@ -67,7 +67,7 @@ async function run() {
     }
 
     for (const entityImport of entitiesImports) {
-      content += `import {${entityImport}} from './${toKebabCase(
+      content += `import {${entityImport}} from '../entities/${toKebabCase(
         entityImport
       )}';\n`;
     }
