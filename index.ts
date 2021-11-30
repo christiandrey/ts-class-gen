@@ -1,4 +1,9 @@
-import { EmittedClass, EmittedDto, parser } from "./parser";
+import {
+  EmittedClass,
+  EmittedDto,
+  EmittedValidationSchema,
+  parser,
+} from "./parser";
 import {
   arrayUnique,
   createDirAsync,
@@ -8,6 +13,7 @@ import {
   readDirAsync,
   readFileAsync,
   removeDirAsync,
+  toCamelCase,
   toKebabCase,
 } from "./utils";
 
@@ -19,19 +25,24 @@ const DTOS_FOLDER = join(ROOT, "dtos");
 const ENUMS_FOLDER = join(ROOT, "enums");
 const ENTITIES_FOLDER = join(ROOT, "entities");
 const TYPINGS_FOLDER = join(ROOT, "typings");
+const VALIDATION_SCHEMAS_FOLDER = join(ROOT, "schemas", "validation");
 
 async function run() {
   await removeDirAsync(ENTITIES_FOLDER);
   await removeDirAsync(TYPINGS_FOLDER);
+  await removeDirAsync(VALIDATION_SCHEMAS_FOLDER);
   await createDirAsync(ENTITIES_FOLDER);
   await createDirAsync(TYPINGS_FOLDER);
+  await createDirAsync(VALIDATION_SCHEMAS_FOLDER, true);
 
   const entities: Array<EmittedClass> = [];
   const options: Array<EmittedDto> = [];
+  const validationSchemas: Array<EmittedValidationSchema> = [];
   const dtos = await readDirAsync(DTOS_FOLDER);
   const classDtos = dtos.filter((o) => !isOptionsDto(o));
   const optionsDtos = dtos.filter(isOptionsDto);
-  let entityExportContent = "";
+  let entitiesExportContent = "",
+    validationSchemasExportContent = "";
 
   for (const classDto of classDtos) {
     const content = await readFileAsync(join(DTOS_FOLDER, classDto));
@@ -45,6 +56,12 @@ async function run() {
     options.push(...parsed);
   }
 
+  for (const dto of dtos) {
+    const content = await readFileAsync(join(DTOS_FOLDER, dto));
+    const parsed = parser.emitValidationSchemas(content);
+    validationSchemas.push(...parsed);
+  }
+
   for (const entity of entities) {
     await createFileAsync(
       `${toKebabCase(entity.name)}.ts`,
@@ -52,16 +69,43 @@ async function run() {
       entity.emitted
     );
 
-    entityExportContent += `import {${entity.name}} from './${toKebabCase(
+    entitiesExportContent += `import {${entity.name}} from './${toKebabCase(
       entity.name
     )}';\n`;
   }
 
-  if (entityExportContent.length) {
-    entityExportContent += "\n";
-    entityExportContent += `export {${entities.map((o) => o.name).join(",")}}`;
+  for (const validationSchema of validationSchemas) {
+    await createFileAsync(
+      `${toKebabCase(validationSchema.name)}.ts`,
+      VALIDATION_SCHEMAS_FOLDER,
+      validationSchema.emitted
+    );
 
-    await createFileAsync("index.ts", ENTITIES_FOLDER, entityExportContent);
+    validationSchemasExportContent += `import ${toCamelCase(
+      validationSchema.name
+    )} from './${toKebabCase(validationSchema.name)}';\n`;
+  }
+
+  if (entitiesExportContent.length) {
+    entitiesExportContent += "\n";
+    entitiesExportContent += `export {${entities
+      .map((o) => o.name)
+      .join(",")}}`;
+
+    await createFileAsync("index.ts", ENTITIES_FOLDER, entitiesExportContent);
+  }
+
+  if (validationSchemasExportContent.length) {
+    validationSchemasExportContent += "\n";
+    validationSchemasExportContent += `export const validationSchemas = {${validationSchemas
+      .map((o) => toCamelCase(o.name))
+      .join(",")}}`;
+
+    await createFileAsync(
+      "index.ts",
+      VALIDATION_SCHEMAS_FOLDER,
+      validationSchemasExportContent
+    );
   }
 
   if (options.length) {

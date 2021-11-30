@@ -10,14 +10,63 @@ const _readdirAsync = promisify(readdir);
 const _writeFileAsync = promisify(writeFile);
 const _statAsync = promisify(stat);
 
-export type ParsedPropertyType = {
+export type AttributeParameter = boolean | number | string;
+
+export const VALIDATION_ATTRIBUTES = [
+  "Required",
+  "DataType",
+  "MinLength",
+  "EmailAddress",
+];
+
+export const VALIDATION_ATTRIBUTES_MAP: Map<
+  string,
+  (param?: AttributeParameter) => string | undefined
+> = new Map([
+  ["Required", () => `required(getRequiredValidationMessage)`],
+  [
+    "DataType",
+    (param?: AttributeParameter) => {
+      let validator: string | undefined = undefined;
+
+      switch (param) {
+        case "DataType.Password":
+          validator = `min(4)`;
+          break;
+        case "DataType.EmailAddress":
+          validator = `email(getEmailValidationMessage)`;
+          break;
+        default:
+          break;
+      }
+
+      return validator;
+    },
+  ],
+  ["MinLength", (param?: AttributeParameter) => `min(${param ?? 1})`],
+  ["EmailAddress", () => `email(getEmailValidationMessage)`],
+]);
+
+type BaseParsedPropertyType = {
   name: string;
   type: string;
-  arrayLevels?: number;
-  isArray: boolean;
+  isNullable: boolean;
   isEnum: boolean;
   isPrimitive: boolean;
-  isNullable: boolean;
+  isArray: boolean;
+};
+
+export type ParsedPropertyType = BaseParsedPropertyType & {
+  arrayLevels?: number;
+};
+
+export type ParsedPropertyAttribute = {
+  name: string;
+  parameters: Array<AttributeParameter>;
+};
+
+export type ParsedPropertyWithAttributes = BaseParsedPropertyType & {
+  attributes: Array<ParsedPropertyAttribute>;
 };
 
 export function getTypescriptClassName(className: string): string {
@@ -50,6 +99,10 @@ export function isEnum(type: string): boolean {
 
 export function isOptionsDto(type: string): boolean {
   return type.includes("Options");
+}
+
+export function hasValidationAttributes(content: string): boolean {
+  return VALIDATION_ATTRIBUTES.some((o) => content.includes(o));
 }
 
 export function extractChildType(type: string): string {
@@ -127,18 +180,20 @@ export async function pathExistsAsync(path: PathLike) {
   }
 }
 
-export async function removeDirAsync(path: PathLike) {
+export async function removeDirAsync(path: PathLike, recursive = true) {
   const exists = await pathExistsAsync(path);
 
   if (!exists) {
     return;
   }
 
-  await _rmAsync(path, { recursive: true });
+  await _rmAsync(path, { recursive });
 }
 
-export function createDirAsync(path: PathLike) {
-  return _mkdirAsync(path);
+export function createDirAsync(path: PathLike, recursive = false) {
+  return _mkdirAsync(path, {
+    recursive,
+  });
 }
 
 export async function createFileAsync(

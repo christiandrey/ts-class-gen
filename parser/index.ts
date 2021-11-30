@@ -4,7 +4,10 @@ import {
   TypeEmitter,
 } from "@fluffy-spoon/csharp-to-typescript-generator";
 import {
+  ParsedPropertyAttribute,
   ParsedPropertyType,
+  ParsedPropertyWithAttributes,
+  VALIDATION_ATTRIBUTES_MAP,
   arrayUnique,
   extractChildType,
   getConstructorSuffix,
@@ -15,6 +18,8 @@ import {
   toCamelCase,
   toKebabCase,
 } from "../utils";
+
+import { CSharpAttributeParameter } from "@fluffy-spoon/csharp-to-typescript-generator/node_modules/@fluffy-spoon/csharp-parser";
 
 export type EmittedClass = {
   name: string;
@@ -27,6 +32,11 @@ export type EmittedDto = {
   enums: Array<string>;
   entitiesImports: Array<string>;
   typingsImports: Array<string>;
+};
+
+export type EmittedValidationSchema = {
+  name: string;
+  emitted: string;
 };
 
 function getClassesLength(content: string): number {
@@ -47,6 +57,69 @@ function getEntityProperty(
     isPrimitive: isPrimitive(extractChildType(parsedType)),
     isNullable: type.isNullable,
   } as ParsedPropertyType;
+}
+
+function getEntityPropertyWithAttributes(
+  { name, type, attributes }: CSharpProperty,
+  typeEmitter: TypeEmitter
+) {
+  const parsedType = typeEmitter.convertTypeToTypeScript(type);
+
+  return {
+    name: toCamelCase(name),
+    type: getTypescriptClassName(extractChildType(parsedType)),
+    isArray: parsedType.startsWith("Array"),
+    isNullable: type.isNullable,
+    isEnum: isEnum(parsedType),
+    isPrimitive: isPrimitive(extractChildType(parsedType)),
+    attributes: attributes.map((o) => ({
+      name: o.name,
+      parameters: o.parameters.map(getAttributeParameter),
+    })),
+  } as ParsedPropertyWithAttributes;
+}
+
+function getAttributeParameter(
+  parameter: CSharpAttributeParameter
+): boolean | number | string {
+  const { value } = parameter;
+
+  if (
+    typeof value === "boolean" ||
+    typeof value === "number" ||
+    typeof value === "string"
+  ) {
+    return value;
+  }
+
+  return value.name;
+}
+
+function mapValidationAttributeSchemaFn(
+  attribute: ParsedPropertyAttribute
+): string | undefined {
+  const { name, parameters } = attribute;
+  return VALIDATION_ATTRIBUTES_MAP.get(name)?.(parameters[0]);
+}
+
+function mapPropertyTypeSchemaFn(
+  property: ParsedPropertyWithAttributes
+): string {
+  const { type, isEnum, isPrimitive, isArray } = property;
+
+  if (isEnum) {
+    return `string()`;
+  }
+
+  if (isPrimitive) {
+    return `${type}()`;
+  }
+
+  if (isArray) {
+    return `array()`;
+  }
+
+  return `object()`;
 }
 
 function emitClass(content: string, index = 0): EmittedClass {
@@ -245,8 +318,130 @@ function emitDtos(content: string): Array<EmittedDto> {
   return emitted;
 }
 
+function emitValidationSchema(
+  content: string,
+  index = 0
+): EmittedValidationSchema | undefined {
+  let name = "";
+  const emitter = new Emitter(content);
+  const emitted = emitter.emit({
+    file: {
+      onBeforeEmit: (file, typescriptEmitter) => {
+        typescriptEmitter.clear();
+
+        const typeEmitter = new TypeEmitter(typescriptEmitter);
+        const entityClass = file.getAllClassesRecursively()[index];
+        const entityClassName = (name = getTypescriptClassName(
+          entityClass.name
+        ));
+        const entityProperties = entityClass.properties
+          .map((property) =>
+            getEntityPropertyWithAttributes(property, typeEmitter)
+          )
+          .filter((o) => !!o.attributes.length);
+
+        if (!entityProperties.length) {
+          return;
+        }
+
+        const mappedEntityProperties = entityProperties.map((o) => ({
+          property: o,
+          propertyTypeSchemaFn: mapPropertyTypeSchemaFn(o),
+          validationAttributesSchemaFns: o.attributes.map(
+            mapValidationAttributeSchemaFn
+          ),
+        }));
+
+        const yupImports = arrayUnique(
+          mappedEntityProperties
+            .map((o) => o.propertyTypeSchemaFn.split("(")[0])
+            .concat("object")
+        ).sort();
+
+        const utilsImports: Array<string> = [];
+
+        const utilImportsCollection = mappedEntityProperties.flatMap(
+          (o) => o.validationAttributesSchemaFns
+        );
+
+        if (utilImportsCollection.some((o) => o?.includes("email("))) {
+          utilsImports.push("getEmailValidationMessage");
+        }
+
+        if (utilImportsCollection.some((o) => o?.includes("required("))) {
+          utilsImports.push("getRequiredValidationMessage");
+        }
+
+        if (utilsImports.length) {
+          typescriptEmitter.writeLine(
+            `import {${utilsImports.join(", ")}} from './utils';`
+          );
+        }
+
+        if (yupImports.length) {
+          typescriptEmitter.writeLine(
+            `import {${yupImports.join(", ")}} from 'yup';`
+          );
+        }
+
+        typescriptEmitter.ensureNewParagraph();
+        typescriptEmitter.writeLine(
+          `const ${toCamelCase(entityClassName)} = object({`
+        );
+        typescriptEmitter.increaseIndentation();
+
+        for (const mappedProperty of mappedEntityProperties) {
+          const {
+            property,
+            propertyTypeSchemaFn,
+            validationAttributesSchemaFns,
+          } = mappedProperty;
+          typescriptEmitter.writeLine(
+            `${property.name}: ${[
+              propertyTypeSchemaFn,
+              ...validationAttributesSchemaFns.filter((o) => !!o),
+            ].join(".")},`
+          );
+        }
+
+        typescriptEmitter.decreaseIndentation();
+        typescriptEmitter.writeLine(`});`);
+        typescriptEmitter.ensureNewParagraph();
+        typescriptEmitter.writeLine(
+          `export default ${toCamelCase(entityClassName)};`
+        );
+      },
+    },
+  });
+
+  if (emitted.length) {
+    return {
+      name,
+      emitted,
+    };
+  }
+}
+
+function emitValidationSchemas(
+  content: string
+): Array<EmittedValidationSchema> {
+  const length = getClassesLength(content);
+  const emitted: Array<EmittedValidationSchema> = [];
+
+  for (let i = 0; i < length; i++) {
+    const validationSchema = emitValidationSchema(content, i);
+
+    if (validationSchema) {
+      emitted.push(validationSchema);
+    }
+  }
+
+  return emitted;
+}
+
 export const parser = {
   emitClasses,
   emitDtos,
   emitEnum,
+  emitValidationSchemas,
 };
