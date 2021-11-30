@@ -6,6 +6,8 @@ node_modules
 # builds
 build
 dist
+entities
+typings
 .rpt2_cache
 
 # misc

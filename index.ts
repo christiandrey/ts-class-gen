@@ -1,101 +1,68 @@
+import { EmittedContent, parser } from "./parser";
 import {
-  Emitter,
-  TypeEmitter,
-} from "@fluffy-spoon/csharp-to-typescript-generator";
-import {
-  ParsedPropertyType,
-  extractChildType,
-  getConstructorSuffix,
-  getFullType,
-  getTypescriptClassName,
-  isEnum,
-  isPrimitive,
-  toCamelCase,
+  arrayUnique,
+  createDirAsync,
+  createFileAsync,
+  pathExistsAsync,
+  readDirAsync,
+  readFileAsync,
+  removeDirAsync,
   toKebabCase,
 } from "./utils";
 
-import { readFileSync } from "fs";
+import { cwd } from "process";
+import { join } from "path";
 
-const content = readFileSync("./models/ChatDto.cs", "utf-8");
-const emitter = new Emitter(content);
-const emitted = emitter.emit({
-  file: {
-    onBeforeEmit: (file, typescriptEmitter) => {
-      typescriptEmitter.clear();
+const ROOT = cwd();
+const DTOS_FOLDER = join(ROOT, "dtos");
+const ENUMS_FOLDER = join(ROOT, "enums");
+const ENTITIES_FOLDER = join(ROOT, "entities");
+const TYPINGS_FOLDER = join(ROOT, "typings");
 
-      const typeEmitter = new TypeEmitter(typescriptEmitter);
-      const entityClass = file.getAllClassesRecursively()[0];
-      const entityParents = entityClass.inheritsFrom.map((o) =>
-        getTypescriptClassName(o.name)
-      );
-      const entityClassName = getTypescriptClassName(entityClass.name);
-      const entityProperties = entityClass.properties.map(({ name, type }) => {
-        const parsedType = typeEmitter.convertTypeToTypeScript(type);
-        return {
-          name: toCamelCase(name),
-          type: getTypescriptClassName(extractChildType(parsedType)),
-          arrayLevels: parsedType.match(/Array/g)?.length,
-          isArray: parsedType.startsWith("Array"),
-          isEnum: isEnum(parsedType),
-          isPrimitive: isPrimitive(extractChildType(parsedType)),
-          isNullable: type.isNullable,
-        } as ParsedPropertyType;
-      });
-      const importedTypes = entityProperties
-        .filter((o) => !o.isPrimitive && !o.isEnum)
-        .map((o) => o.type)
-        .concat(entityParents)
-        .sort();
-      const isBaseEntity = entityClassName === "BaseEntity";
+async function run() {
+  await removeDirAsync(ENTITIES_FOLDER);
+  await removeDirAsync(TYPINGS_FOLDER);
+  await createDirAsync(ENTITIES_FOLDER);
 
-      for (const importedType of importedTypes) {
-        typescriptEmitter.writeLine(
-          `import {${importedType}} from './${toKebabCase(importedType)}';`
-        );
-      }
+  const entities: Array<EmittedContent> = [];
+  const dtos = await readDirAsync(DTOS_FOLDER);
 
-      typescriptEmitter.ensureNewParagraph();
+  for (const dto of dtos) {
+    const content = await readFileAsync(join(DTOS_FOLDER, dto));
+    const parsed = parser.emitClasses(content);
+    entities.push(...parsed);
+  }
 
-      typescriptEmitter.enterScope(
-        `export class ${entityClassName}${
-          entityParents.length ? ` extends ${entityParents.join(", ")}` : ""
-        } {`
-      );
+  for (const entity of entities) {
+    await createFileAsync(
+      `${toKebabCase(entity.name)}.ts`,
+      ENTITIES_FOLDER,
+      entity.emitted
+    );
+  }
 
-      for (const entityProperty of entityProperties) {
-        const { type, name, isNullable, isArray, arrayLevels } = entityProperty;
-        typescriptEmitter.writeIndentation();
-        typescriptEmitter.writeLine(
-          `${name}${isNullable ? "?" : ""}: ${getFullType(
-            type,
-            isArray,
-            arrayLevels
-          )};`
-        );
-      }
+  const enums = arrayUnique(entities.flatMap((o) => o.enums));
+  const parsedEnums: Array<string> = [];
 
-      typescriptEmitter.ensureNewParagraph();
-      typescriptEmitter.enterScope(`constructor(dto: ${entityClassName}) {`);
+  for (const enumName of enums) {
+    const enumPath = join(ENUMS_FOLDER, `${enumName}.cs`);
+    const exists = await pathExistsAsync(enumPath);
 
-      if (!isBaseEntity) {
-        typescriptEmitter.writeIndentation();
-        typescriptEmitter.writeLine(`super(dto);`);
-        typescriptEmitter.ensureNewParagraph();
-      }
+    if (exists) {
+      const content = await readFileAsync(enumPath);
+      const parsed = parser.emitEnum(content);
+      parsedEnums.push(parsed);
+    }
+  }
 
-      for (const entityProperty of entityProperties) {
-        const { name } = entityProperty;
-        typescriptEmitter.writeIndentation();
-        typescriptEmitter.writeLine(
-          `this.${name} = ${getConstructorSuffix(entityProperty)};`
-        );
-        typescriptEmitter.ensureNewLine();
-      }
+  if (parsedEnums.length) {
+    await createDirAsync(TYPINGS_FOLDER);
+    await createFileAsync(
+      "index.d.ts",
+      TYPINGS_FOLDER,
+      parsedEnums.map((o) => `export ${o}`).join("\n\n")
+    );
+  }
+}
 
-      typescriptEmitter.leaveScope();
-      typescriptEmitter.leaveScope();
-    },
-  },
-});
-
-console.log(emitted);
+run();

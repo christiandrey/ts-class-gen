@@ -1,3 +1,15 @@
+import { PathLike, mkdir, readFile, readdir, rm, stat, writeFile } from "fs";
+
+import { join } from "path";
+import { promisify } from "util";
+
+const _readFileAsync = promisify(readFile);
+const _rmAsync = promisify(rm);
+const _mkdirAsync = promisify(mkdir);
+const _readdirAsync = promisify(readdir);
+const _writeFileAsync = promisify(writeFile);
+const _statAsync = promisify(stat);
+
 export type ParsedPropertyType = {
   name: string;
   type: string;
@@ -97,4 +109,49 @@ export function getConstructorSuffix({
   }
 
   return `dto.${name}?.map((o) => new ${type}(o)) ?? []`;
+}
+
+export function arrayUnique<T>(list: Array<T>): Array<T> {
+  return Array.from(new Set(list));
+}
+
+export async function pathExistsAsync(path: PathLike) {
+  try {
+    return !!(await _statAsync(path));
+  } catch (error) {
+    return false;
+  }
+}
+
+export async function removeDirAsync(path: PathLike) {
+  const exists = await pathExistsAsync(path);
+
+  if (!exists) {
+    return;
+  }
+
+  await _rmAsync(path, { recursive: true });
+}
+
+export function createDirAsync(path: PathLike) {
+  return _mkdirAsync(path);
+}
+
+export async function createFileAsync(
+  name: string,
+  path: string,
+  content: string = ""
+) {
+  return _writeFileAsync(join(path, name), content, {
+    encoding: "utf-8",
+  });
+}
+
+export async function readFileAsync(path: PathLike): Promise<string> {
+  return _readFileAsync(path, "utf-8");
+}
+
+export async function readDirAsync(path: PathLike) {
+  const exists = await pathExistsAsync(path);
+  return exists ? _readdirAsync(path, { encoding: "utf-8" }) : [];
 }
