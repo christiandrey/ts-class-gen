@@ -32,6 +32,8 @@ function generateValidationSchema(
 	const data = emitter.emit({
 		file: {
 			onBeforeEmit: (file, typescriptEmitter) => {
+				typescriptEmitter.clear();
+
 				const typeEmitter = new TypeEmitter(typescriptEmitter);
 				const entityClass = file.getAllClassesRecursively()[index];
 				const entityClassName = (name = getTsClassName(entityClass.name));
@@ -55,7 +57,7 @@ function generateValidationSchema(
 					(o) =>
 						mappedProperties
 							.flatMap((p) => p.attributesYupFns)
-							.includes(o.slice(3, -17).toLowerCase()),
+							.some((p) => p?.includes(o.slice(3, -17).toLowerCase())),
 				);
 
 				if (utilsImports.length) {
@@ -101,12 +103,12 @@ export async function transformToValidationSchemas() {
 	const dir = paths.VALIDATION_SCHEMAS_FOLDER;
 
 	await removeDirAsync(dir);
-	await createDirAsync(dir);
+	await createDirAsync(dir, true);
 
 	const dtos = await getDtosAsync();
 	const validationSchemas = dtos.flatMap((o) => generateValidationSchemas(o));
 	const exports = validationSchemas.map(
-		({name}) => `import ${toCamelCase(name)} from './${toKebabCase(name)}';\n`,
+		({name}) => `import ${toCamelCase(name)} from './${toKebabCase(name)}';`,
 	);
 
 	if (exports.length) {

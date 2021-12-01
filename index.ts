@@ -1,141 +1,145 @@
-import {EmittedClass, EmittedDto, EmittedValidationSchema, parser} from './parser';
-import {
-	arrayUnique,
-	createDirAsync,
-	createFileAsync,
-	isOptionsDto,
-	pathExistsAsync,
-	readDirAsync,
-	readFileAsync,
-	removeDirAsync,
-	toCamelCase,
-	toKebabCase,
-} from './utils';
+// import {EmittedClass, EmittedDto, EmittedValidationSchema, parser} from './parser';
+// import {
+// 	arrayUnique,
+// 	createDirAsync,
+// 	createFileAsync,
+// 	isOptionsDto,
+// 	pathExistsAsync,
+// 	readDirAsync,
+// 	readFileAsync,
+// 	removeDirAsync,
+// 	toCamelCase,
+// 	toKebabCase,
+// } from './utils';
 
-import {cwd} from 'process';
-import {join} from 'path';
+import {transformer} from './transformer';
 
-const ROOT = cwd();
-const DTOS_FOLDER = join(ROOT, 'dtos');
-const ENUMS_FOLDER = join(ROOT, 'enums');
-const ENTITIES_FOLDER = join(ROOT, 'entities');
-const TYPINGS_FOLDER = join(ROOT, 'typings');
-const VALIDATION_SCHEMAS_FOLDER = join(ROOT, 'schemas', 'validation');
+// import {cwd} from 'process';
+// import {join} from 'path';
 
-async function run() {
-	await removeDirAsync(ENTITIES_FOLDER);
-	await removeDirAsync(TYPINGS_FOLDER);
-	await removeDirAsync(VALIDATION_SCHEMAS_FOLDER);
-	await createDirAsync(ENTITIES_FOLDER);
-	await createDirAsync(TYPINGS_FOLDER);
-	await createDirAsync(VALIDATION_SCHEMAS_FOLDER, true);
+// const ROOT = cwd();
+// const DTOS_FOLDER = join(ROOT, 'dtos');
+// const ENUMS_FOLDER = join(ROOT, 'enums');
+// const ENTITIES_FOLDER = join(ROOT, 'entities');
+// const TYPINGS_FOLDER = join(ROOT, 'typings');
+// const VALIDATION_SCHEMAS_FOLDER = join(ROOT, 'schemas', 'validation');
 
-	const entities: Array<EmittedClass> = [];
-	const options: Array<EmittedDto> = [];
-	const validationSchemas: Array<EmittedValidationSchema> = [];
-	const dtos = await readDirAsync(DTOS_FOLDER);
-	const classDtos = dtos.filter((o) => !isOptionsDto(o));
-	const optionsDtos = dtos.filter(isOptionsDto);
-	let entitiesExportContent = '',
-		validationSchemasExportContent = '';
+// async function run() {
+// 	await removeDirAsync(ENTITIES_FOLDER);
+// 	await removeDirAsync(TYPINGS_FOLDER);
+// 	await removeDirAsync(VALIDATION_SCHEMAS_FOLDER);
+// 	await createDirAsync(ENTITIES_FOLDER);
+// 	await createDirAsync(TYPINGS_FOLDER);
+// 	await createDirAsync(VALIDATION_SCHEMAS_FOLDER, true);
 
-	for (const classDto of classDtos) {
-		const content = await readFileAsync(join(DTOS_FOLDER, classDto));
-		const parsed = parser.emitClasses(content);
-		entities.push(...parsed);
-	}
+// 	const entities: Array<EmittedClass> = [];
+// 	const options: Array<EmittedDto> = [];
+// 	const validationSchemas: Array<EmittedValidationSchema> = [];
+// 	const dtos = await readDirAsync(DTOS_FOLDER);
+// 	const classDtos = dtos.filter((o) => !isOptionsDto(o));
+// 	const optionsDtos = dtos.filter(isOptionsDto);
+// 	let entitiesExportContent = '',
+// 		validationSchemasExportContent = '';
 
-	for (const optionDto of optionsDtos) {
-		const content = await readFileAsync(join(DTOS_FOLDER, optionDto));
-		const parsed = parser.emitDtos(content);
-		options.push(...parsed);
-	}
+// 	for (const classDto of classDtos) {
+// 		const content = await readFileAsync(join(DTOS_FOLDER, classDto));
+// 		const parsed = parser.emitClasses(content);
+// 		entities.push(...parsed);
+// 	}
 
-	for (const dto of dtos) {
-		const content = await readFileAsync(join(DTOS_FOLDER, dto));
-		const parsed = parser.emitValidationSchemas(content);
-		validationSchemas.push(...parsed);
-	}
+// 	for (const optionDto of optionsDtos) {
+// 		const content = await readFileAsync(join(DTOS_FOLDER, optionDto));
+// 		const parsed = parser.emitDtos(content);
+// 		options.push(...parsed);
+// 	}
 
-	for (const entity of entities) {
-		await createFileAsync(`${toKebabCase(entity.name)}.ts`, ENTITIES_FOLDER, entity.emitted);
+// 	for (const dto of dtos) {
+// 		const content = await readFileAsync(join(DTOS_FOLDER, dto));
+// 		const parsed = parser.emitValidationSchemas(content);
+// 		validationSchemas.push(...parsed);
+// 	}
 
-		entitiesExportContent += `import {${entity.name}} from './${toKebabCase(entity.name)}';\n`;
-	}
+// 	for (const entity of entities) {
+// 		await createFileAsync(`${toKebabCase(entity.name)}.ts`, ENTITIES_FOLDER, entity.emitted);
 
-	for (const validationSchema of validationSchemas) {
-		await createFileAsync(
-			`${toKebabCase(validationSchema.name)}.ts`,
-			VALIDATION_SCHEMAS_FOLDER,
-			validationSchema.emitted,
-		);
+// 		entitiesExportContent += `import {${entity.name}} from './${toKebabCase(entity.name)}';\n`;
+// 	}
 
-		validationSchemasExportContent += `import ${toCamelCase(
-			validationSchema.name,
-		)} from './${toKebabCase(validationSchema.name)}';\n`;
-	}
+// 	for (const validationSchema of validationSchemas) {
+// 		await createFileAsync(
+// 			`${toKebabCase(validationSchema.name)}.ts`,
+// 			VALIDATION_SCHEMAS_FOLDER,
+// 			validationSchema.emitted,
+// 		);
 
-	if (entitiesExportContent.length) {
-		entitiesExportContent += '\n';
-		entitiesExportContent += `export {${entities.map((o) => o.name).join(',')}}`;
+// 		validationSchemasExportContent += `import ${toCamelCase(
+// 			validationSchema.name,
+// 		)} from './${toKebabCase(validationSchema.name)}';\n`;
+// 	}
 
-		await createFileAsync('index.ts', ENTITIES_FOLDER, entitiesExportContent);
-	}
+// 	if (entitiesExportContent.length) {
+// 		entitiesExportContent += '\n';
+// 		entitiesExportContent += `export {${entities.map((o) => o.name).join(',')}}`;
 
-	if (validationSchemasExportContent.length) {
-		validationSchemasExportContent += '\n';
-		validationSchemasExportContent += `export const validationSchemas = {${validationSchemas
-			.map((o) => toCamelCase(o.name))
-			.join(',')}}`;
+// 		await createFileAsync('index.ts', ENTITIES_FOLDER, entitiesExportContent);
+// 	}
 
-		await createFileAsync('index.ts', VALIDATION_SCHEMAS_FOLDER, validationSchemasExportContent);
-	}
+// 	if (validationSchemasExportContent.length) {
+// 		validationSchemasExportContent += '\n';
+// 		validationSchemasExportContent += `export const validationSchemas = {${validationSchemas
+// 			.map((o) => toCamelCase(o.name))
+// 			.join(',')}}`;
 
-	if (options.length) {
-		let content = '';
+// 		await createFileAsync('index.ts', VALIDATION_SCHEMAS_FOLDER, validationSchemasExportContent);
+// 	}
 
-		const entitiesImports = arrayUnique(options.flatMap((o) => o.entitiesImports))
-			.filter((o) => !isOptionsDto(o))
-			.sort();
-		const typingsImports = arrayUnique(options.flatMap((o) => o.typingsImports)).sort();
+// 	if (options.length) {
+// 		let content = '';
 
-		if (typingsImports.length) {
-			content += `import {${typingsImports.join(', ')}} from '.';\n`;
-		}
+// 		const entitiesImports = arrayUnique(options.flatMap((o) => o.entitiesImports))
+// 			.filter((o) => !isOptionsDto(o))
+// 			.sort();
+// 		const typingsImports = arrayUnique(options.flatMap((o) => o.typingsImports)).sort();
 
-		for (const entityImport of entitiesImports) {
-			content += `import {${entityImport}} from '../entities/${toKebabCase(entityImport)}';\n`;
-		}
+// 		if (typingsImports.length) {
+// 			content += `import {${typingsImports.join(', ')}} from '.';\n`;
+// 		}
 
-		content += '\n';
-		content += options.map((o) => o.emitted).join('\n\n');
+// 		for (const entityImport of entitiesImports) {
+// 			content += `import {${entityImport}} from '../entities/${toKebabCase(entityImport)}';\n`;
+// 		}
 
-		await createFileAsync('dtos.d.ts', TYPINGS_FOLDER, content);
-	}
+// 		content += '\n';
+// 		content += options.map((o) => o.emitted).join('\n\n');
 
-	const enums = arrayUnique(
-		entities.flatMap((o) => o.enums).concat(options.flatMap((o) => o.enums)),
-	).sort();
-	const parsedEnums: Array<string> = [];
+// 		await createFileAsync('dtos.d.ts', TYPINGS_FOLDER, content);
+// 	}
 
-	for (const enumName of enums) {
-		const enumPath = join(ENUMS_FOLDER, `${enumName}.cs`);
-		const exists = await pathExistsAsync(enumPath);
+// 	const enums = arrayUnique(
+// 		entities.flatMap((o) => o.enums).concat(options.flatMap((o) => o.enums)),
+// 	).sort();
+// 	const parsedEnums: Array<string> = [];
 
-		if (exists) {
-			const content = await readFileAsync(enumPath);
-			const parsed = parser.emitEnum(content);
-			parsedEnums.push(parsed);
-		}
-	}
+// 	for (const enumName of enums) {
+// 		const enumPath = join(ENUMS_FOLDER, `${enumName}.cs`);
+// 		const exists = await pathExistsAsync(enumPath);
 
-	if (parsedEnums.length) {
-		await createFileAsync(
-			'index.d.ts',
-			TYPINGS_FOLDER,
-			parsedEnums.map((o) => `export ${o}`).join('\n\n'),
-		);
-	}
-}
+// 		if (exists) {
+// 			const content = await readFileAsync(enumPath);
+// 			const parsed = parser.emitEnum(content);
+// 			parsedEnums.push(parsed);
+// 		}
+// 	}
 
-run();
+// 	if (parsedEnums.length) {
+// 		await createFileAsync(
+// 			'index.d.ts',
+// 			TYPINGS_FOLDER,
+// 			parsedEnums.map((o) => `export ${o}`).join('\n\n'),
+// 		);
+// 	}
+// }
+
+// run();
+
+transformer.runAsync();

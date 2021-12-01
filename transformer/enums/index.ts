@@ -1,4 +1,5 @@
 import {
+	arrayUnique,
 	createDirAsync,
 	createFileAsync,
 	pathExistsAsync,
@@ -35,8 +36,8 @@ export async function transformToTypingsAsync(enums: Array<string> = []) {
 	await removeDirAsync(join(dir, 'index.d.ts'));
 	await createDirAsync(dir);
 
-	for (const enumName of enums) {
-		const enumPath = join(dir, `${enumName}.cs`);
+	for (const enumName of arrayUnique(enums)) {
+		const enumPath = join(paths.ENUMS_FOLDER, `${enumName}.cs`);
 		const enumExists = await pathExistsAsync(enumPath);
 
 		if (enumExists) {

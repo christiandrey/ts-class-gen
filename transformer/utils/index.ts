@@ -4,7 +4,7 @@ import {readDirAsync, readFileAsync, toCamelCase} from '../../utils';
 
 import {CSharpAttributeParameter} from '@fluffy-spoon/csharp-parser';
 import {TypeScriptEmitter} from '@fluffy-spoon/csharp-to-typescript-generator/dist/src/TypeScriptEmitter';
-import {join} from 'path/posix';
+import {join} from 'path';
 import {paths} from '../paths';
 
 export function isEnum(type: string): boolean {

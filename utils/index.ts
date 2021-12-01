@@ -1,7 +1,7 @@
 import {PathLike, mkdir, readFile, readdir, rm, stat, writeFile} from 'fs';
 
 import {join} from 'path';
-import plur from 'plur';
+import pluralizeLib from 'pluralize';
 import {promisify} from 'util';
 
 const _readFileAsync = promisify(readFile);
@@ -91,7 +91,7 @@ export function getTypescriptClassName(className: string): string {
 }
 
 export function pluralize(word: string): string {
-	return plur(word, 2);
+	return pluralizeLib(word);
 }
 
 export function toCamelCase(text: string) {
