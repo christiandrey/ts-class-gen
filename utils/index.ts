@@ -1,6 +1,7 @@
 import { PathLike, mkdir, readFile, readdir, rm, stat, writeFile } from "fs";
 
 import { join } from "path";
+import plur from "plur";
 import { promisify } from "util";
 
 const _readFileAsync = promisify(readFile);
@@ -71,6 +72,10 @@ export type ParsedPropertyWithAttributes = BaseParsedPropertyType & {
 
 export function getTypescriptClassName(className: string): string {
   return className.replace("Dto", "");
+}
+
+export function pluralize(word: string): string {
+  return plur(word, 2);
 }
 
 export function toCamelCase(text: string) {
