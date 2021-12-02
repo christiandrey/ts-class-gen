@@ -99,7 +99,7 @@ function generateValidationSchemas(source: string): Array<GeneratedValidationSch
 		.filter((o) => !!o) as Array<GeneratedValidationSchema>;
 }
 
-export async function transformToValidationSchemas() {
+export async function transformToValidationSchemasAsync() {
 	const dir = paths.VALIDATION_SCHEMAS_FOLDER;
 
 	await removeDirAsync(dir);

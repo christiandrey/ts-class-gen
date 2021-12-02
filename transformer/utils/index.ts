@@ -38,6 +38,10 @@ export function isLiteDto(type: string): boolean {
 	return type.includes('Lite');
 }
 
+export function isBaseDto(type: string): boolean {
+	return type === 'BaseEntity';
+}
+
 export function extendsLiteDto(parents: Array<string>): boolean {
 	return parents.some((o) => o.includes('Lite'));
 }
@@ -52,8 +56,9 @@ export function getChildType(type: string): string {
 	return matched.includes('Array') ? getChildType(matched) : matched;
 }
 
-export function getTsClassName(className: string): string {
-	return className.replace('Dto', '');
+export function getTsClassName(className: string, normalize = false): string {
+	const type = className.replace('Dto', '');
+	return normalize ? type.replace('Lite', '') : type;
 }
 
 export function getClassesSize(source: string): number {
@@ -80,7 +85,7 @@ export function getClassPropertyMapper(
 		return {
 			name: toCamelCase(name),
 			type: getTsClassName(getChildType(transformedType)),
-			cleanType: getTsClassName(getChildType(transformedType)).replace('Lite', ''),
+			normalizedType: getTsClassName(getChildType(transformedType), true),
 			arrayLevels: transformedType.match(/Array/g)?.length,
 			isArray: transformedType.startsWith('Array'),
 			isEnum: isEnum(transformedType),

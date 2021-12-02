@@ -8,8 +8,7 @@ export type PropertyAttribute = {
 export type ClassProperty = {
 	name: string;
 	type: string;
-	// TODO: Find a better name
-	cleanType: string;
+	normalizedType: string;
 	isNullable: boolean;
 	isEnum: boolean;
 	isPrimitive: boolean;

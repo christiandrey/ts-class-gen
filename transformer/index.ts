@@ -1,15 +1,15 @@
 import {getPlural} from '../utils';
 import {transformToEntitiesAsync} from './entities';
-import {transformToNormalizationSchemas} from './schemas/normalization';
+import {transformToNormalizationSchemasAsync} from './schemas/normalization';
 import {transformToOptionsAsync} from './options';
 import {transformToTypingsAsync} from './enums';
-import {transformToValidationSchemas} from './schemas/validation';
+import {transformToValidationSchemasAsync} from './schemas/validation';
 
 async function runAsync() {
 	const entities = await transformToEntitiesAsync();
 	const options = await transformToOptionsAsync();
-	const validationSchemas = await transformToValidationSchemas();
-	const normalizationSchemas = await transformToNormalizationSchemas();
+	const validationSchemas = await transformToValidationSchemasAsync();
+	const normalizationSchemas = await transformToNormalizationSchemasAsync();
 
 	await transformToTypingsAsync([...entities, ...options].flatMap((o) => o.enums));
 
