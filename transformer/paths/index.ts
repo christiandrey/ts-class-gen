@@ -5,6 +5,7 @@ const ROOT = cwd();
 
 export const paths = {
 	ROOT,
+	ADAPTERS_FOLDER: join(ROOT, 'adapters'),
 	DTOS_FOLDER: join(ROOT, 'dtos'),
 	ENUMS_FOLDER: join(ROOT, 'enums'),
 	ENTITIES_FOLDER: join(ROOT, 'entities'),

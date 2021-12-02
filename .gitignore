@@ -6,9 +6,10 @@ node_modules
 # builds
 build
 dist
+adapters/**/*.*
 entities/**/*.*
-typings/**/*.*
 schemas/**/*.*
+typings/**/*.*
 .rpt2_cache
 
 # misc

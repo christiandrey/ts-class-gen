@@ -43,3 +43,8 @@ export type GeneratedNormalizationSchema = {
 	name: string;
 	data: string;
 };
+
+export type GeneratedAdapter = {
+	name: string;
+	data: string;
+};
