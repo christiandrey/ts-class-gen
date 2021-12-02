@@ -8,6 +8,8 @@ export type PropertyAttribute = {
 export type ClassProperty = {
 	name: string;
 	type: string;
+	// TODO: Find a better name
+	cleanType: string;
 	isNullable: boolean;
 	isEnum: boolean;
 	isPrimitive: boolean;
@@ -34,6 +36,11 @@ export type GeneratedOption = {
 };
 
 export type GeneratedValidationSchema = {
+	name: string;
+	data: string;
+};
+
+export type GeneratedNormalizationSchema = {
 	name: string;
 	data: string;
 };

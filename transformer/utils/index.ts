@@ -34,6 +34,14 @@ export function isClassDto(type: string): boolean {
 	return !isOptionsDto(type);
 }
 
+export function isLiteDto(type: string): boolean {
+	return type.includes('Lite');
+}
+
+export function extendsLiteDto(parents: Array<string>): boolean {
+	return parents.some((o) => o.includes('Lite'));
+}
+
 export function getChildType(type: string): string {
 	if (!type.includes('Array')) {
 		return type;
@@ -72,6 +80,7 @@ export function getClassPropertyMapper(
 		return {
 			name: toCamelCase(name),
 			type: getTsClassName(getChildType(transformedType)),
+			cleanType: getTsClassName(getChildType(transformedType)).replace('Lite', ''),
 			arrayLevels: transformedType.match(/Array/g)?.length,
 			isArray: transformedType.startsWith('Array'),
 			isEnum: isEnum(transformedType),
@@ -165,9 +174,10 @@ export function getEntityConstructorSuffix({
 	return `dto.${name}?.map((o) => new ${type}(o)) ?? []`;
 }
 
-export async function getDtosAsync(filter = (o: string) => !!o) {
+export async function getDtosAsync(filter = (o: string) => !!o, exclude: Array<string> = []) {
 	const dir = paths.DTOS_FOLDER;
-	const files = (await readDirAsync(dir)).filter(filter);
+	const exclusionList = exclude.map((p) => `${p}.cs`);
+	const files = (await readDirAsync(dir)).filter(filter).filter((o) => !exclusionList.includes(o));
 	const dtos: Array<string> = [];
 
 	for (const file of files) {
@@ -190,3 +200,5 @@ export function leaveEmitterScope(typescriptEmitter: TypeScriptEmitter, scopeTex
 	typescriptEmitter.decreaseIndentation();
 	typescriptEmitter.writeLine(scopeText);
 }
+
+//TODO: Add a utility function to get all entity class props, with option to include inherited entity classes.
