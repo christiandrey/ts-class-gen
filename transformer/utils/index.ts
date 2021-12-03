@@ -42,23 +42,45 @@ export function isBaseDto(type: string): boolean {
 	return type === 'BaseEntity';
 }
 
+export function isBaseController(name: string): boolean {
+	return name.startsWith('BaseController');
+}
+
+export function isNotBaseController(name: string): boolean {
+	return !isBaseController(name);
+}
+
 export function extendsLiteDto(parents: Array<string>): boolean {
 	return parents.some((o) => o.includes('Lite'));
 }
 
-export function getChildType(type: string): string {
-	if (!type.includes('Array')) {
-		return type;
+export function wrapType(child: string, parent?: string, wrap = true, repeat = 1): string {
+	if (!parent?.length || !wrap) {
+		return child;
 	}
 
-	const matched = type.match(/<(.*)>/)?.[1] ?? type;
+	const wrapped = `${parent}<${child}>`;
 
-	return matched.includes('Array') ? getChildType(matched) : matched;
+	repeat--;
+
+	return repeat ? wrapType(wrapped, parent, wrap, repeat) : wrapped;
+}
+
+export function getChildType(type: string): string {
+	return type.match(/<([A-za-z]+)>/)?.[1] ?? type;
 }
 
 export function getTsClassName(className: string, normalize = false): string {
 	const type = className.replace('Dto', '');
 	return normalize ? type.replace('Lite', '') : type;
+}
+
+export function getTsControllerName(controllerName: string) {
+	return controllerName.replace('Controller', '');
+}
+
+export function getTsControllerMethodName(controllerName: string) {
+	return controllerName.replace('Async', '').replace(/^Get/, 'Read');
 }
 
 export function getClassesSize(source: string): number {
@@ -181,7 +203,7 @@ export function getEntityConstructorSuffix({
 
 export async function getDtosAsync(filter = (o: string) => !!o, exclude: Array<string> = []) {
 	const dir = paths.DTOS_FOLDER;
-	const exclusionList = exclude.map((p) => `${p}.cs`);
+	const exclusionList = exclude.map((p) => `${p}.cs`).concat('.DS_Store');
 	const files = (await readDirAsync(dir)).filter(filter).filter((o) => !exclusionList.includes(o));
 	const dtos: Array<string> = [];
 
@@ -190,6 +212,23 @@ export async function getDtosAsync(filter = (o: string) => !!o, exclude: Array<s
 	}
 
 	return dtos;
+}
+
+export async function getControllersAsync(
+	filter = (o: string) => !!o,
+	exclude: Array<string> = [],
+) {
+	const dir = paths.CONTROLLERS_FOLDER;
+	const exclusionList = exclude.map((p) => `${p}.cs`).concat('.DS_Store');
+	const files = (await readDirAsync(dir)).filter(filter).filter((o) => !exclusionList.includes(o));
+	const controllers: Array<string> = [];
+
+	for (const file of files) {
+		const content = await readFileAsync(join(dir, file));
+		controllers.push(content);
+	}
+
+	return controllers;
 }
 
 export function hasValidationAttributes(content: string): boolean {

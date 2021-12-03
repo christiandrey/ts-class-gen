@@ -1,5 +1,6 @@
 import {getPlural} from '../utils';
 import {transformToAdaptersAsync} from './adapters';
+import {transformToApiAsync} from './api';
 import {transformToEntitiesAsync} from './entities';
 import {transformToNormalizationSchemasAsync} from './schemas/normalization';
 import {transformToOptionsAsync} from './options';
@@ -12,6 +13,7 @@ async function runAsync() {
 	const validationSchemas = await transformToValidationSchemasAsync();
 	const normalizationSchemas = await transformToNormalizationSchemasAsync();
 	const adapters = await transformToAdaptersAsync(normalizationSchemas.map((o) => o.name));
+	const api = await transformToApiAsync();
 
 	await transformToTypingsAsync([...entities, ...options].flatMap((o) => o.enums));
 
@@ -24,10 +26,15 @@ async function runAsync() {
 		)}, ${normalizationSchemas.length} normalization ${getPlural(
 			'schema',
 			normalizationSchemas.length,
-		)} and ${adapters.length} ${getPlural('adapter', adapters.length)}.`,
+		)}, ${adapters.length} ${getPlural('adapter', adapters.length)} and ${
+			api.flatMap((o) => o.actions).length
+		} api ${getPlural('endpoint', api.flatMap((o) => o.actions).length)}.`,
 	);
 }
 
+async function tempAsync() {}
+
 export const transformer = {
 	runAsync,
+	tempAsync,
 };

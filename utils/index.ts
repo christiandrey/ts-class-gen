@@ -33,8 +33,17 @@ export function toKebabCase(text: string): string {
 	);
 }
 
+export function replaceAll(text: string, searchValue: string, replaceValue: string) {
+	const regex = new RegExp(searchValue, 'gm');
+	return text.replace(regex, replaceValue);
+}
+
 export function array(size: number) {
 	return new Array(size).fill(null).map((_, i) => i);
+}
+
+export function isDefined<T>(argument: T | undefined): argument is T {
+	return argument !== undefined;
 }
 
 export function arrayUnique<T>(list: Array<T>, sort = true): Array<T> {
