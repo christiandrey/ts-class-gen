@@ -12,6 +12,7 @@ import {
 	createFileAsync,
 	getPlural,
 	isDefined,
+	readDirAsync,
 	removeDirAsync,
 	replaceAll,
 	toCamelCase,
@@ -52,7 +53,7 @@ function generateActionResponse(
 		getChildType(typeEmitter.convertTypeToTypeScript(returnType)),
 	);
 	const response: ControllerActionResponse = {
-		type: transformedType === 'Response' ? undefined : transformedType,
+		type: ['Response', 'FileContentResult'].includes(transformedType) ? undefined : transformedType,
 		isArray: false,
 		isPaginated: false,
 		isPrimitive: false,
@@ -128,6 +129,7 @@ function generateActionContent(action: ControllerAction): string {
 
 function getControllerActionMapper(
 	typeEmitter: TypeEmitter,
+	extraPrimitiveTypes: Array<string> = [],
 ): (method: CSharpMethod) => ControllerAction | undefined {
 	return (method) => {
 		const name = getTsControllerMethodName(method.name);
@@ -152,12 +154,12 @@ function getControllerActionMapper(
 				return {
 					name,
 					type: getTsClassName(getChildType(transformedType)),
-					isPrimitive: isPrimitive(getChildType(transformedType)),
+					isPrimitive: isPrimitive(getChildType(transformedType), extraPrimitiveTypes),
 					isNullable: type.isNullable,
 					isArray: transformedType.startsWith('Array'),
 					arrayLevels: transformedType.match(/Array/g)?.length,
 					isFromQuery: attributes.some((o) => o.name === 'FromQuery'),
-					isFromRoute: routeChunks.some((o) => o.name === name),
+					isFromRoute: routeChunks.some((o) => o.isVariable && o.name === name),
 				};
 			},
 		);
@@ -174,7 +176,7 @@ function getControllerActionMapper(
 	};
 }
 
-function generateController(source: string): GeneratedController {
+function generateController(source: string, enums: Array<string>): GeneratedController {
 	source = replaceAll(source, ' : base\\(mapper\\)', '');
 
 	const typescriptEmitter = new TypeScriptEmitter();
@@ -182,7 +184,9 @@ function generateController(source: string): GeneratedController {
 	const file = parser.parseSource(source);
 	const controller = file.getAllClassesRecursively()[0];
 	const name = getTsControllerName(controller.name);
-	const actions = controller.methods.map(getControllerActionMapper(typeEmitter)).filter(isDefined);
+	const actions = controller.methods
+		.map(getControllerActionMapper(typeEmitter, enums))
+		.filter(isDefined);
 
 	return {
 		name,
@@ -197,7 +201,8 @@ export async function transformToApiAsync() {
 	await createDirAsync(dir);
 
 	const data = await getControllersAsync(isNotBaseController);
-	const controllers = data.map(generateController);
+	const enums = (await readDirAsync(paths.ENUMS_FOLDER)).map((o) => o.replace('.cs', ''));
+	const controllers = data.map((o) => generateController(o, enums));
 
 	const typescriptEmitter = new TypeScriptEmitter();
 

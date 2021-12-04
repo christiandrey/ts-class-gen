@@ -17,8 +17,8 @@ export function isEnum(type: string): boolean {
 	return !childType.endsWith('Dto');
 }
 
-export function isPrimitive(type: string): boolean {
-	const primitives = ['boolean', 'number', 'string'];
+export function isPrimitive(type: string, extraPrimitiveTypes: Array<string> = []): boolean {
+	const primitives = ['boolean', 'number', 'string', ...extraPrimitiveTypes];
 	return primitives.includes(type);
 }
 
