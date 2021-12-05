@@ -25,6 +25,7 @@ import {
 	getTsClassName,
 	getTsControllerMethodName,
 	getTsControllerName,
+	getType,
 	isNotBaseController,
 	isPrimitive,
 	wrapType,
@@ -81,17 +82,7 @@ function generateActionResponse(
 
 function generateActionContent(action: ControllerAction): string {
 	const {params, response, routeChunks, httpMethod} = action;
-	const paramsChunk = `(${params
-		.map(
-			(o) =>
-				`${o.name}${o.isNullable ? '?' : ''}: ${wrapType(
-					o.type,
-					'Array',
-					o.isArray,
-					o.arrayLevels,
-				)}`,
-		)
-		.join(', ')})`;
+	const paramsChunk = `(${params.map(getType).join(', ')})`;
 
 	const responseTypeChunk = `<${wrapType(
 		wrapType(response.type ?? 'ApiResponse', 'Array', response.isArray, response.arrayLevels),
@@ -148,14 +139,14 @@ function getControllerActionMapper(
 			parameters: o.parameters.map(getAttributeParameter),
 		}));
 		const params: Array<ControllerActionParam> = method.parameters.map(
-			({name, type, attributes}) => {
+			({name, type, defaultValue, attributes}) => {
 				const transformedType = typeEmitter.convertTypeToTypeScript(type);
 
 				return {
 					name,
 					type: getTsClassName(getChildType(transformedType)),
 					isPrimitive: isPrimitive(getChildType(transformedType), extraPrimitiveTypes),
-					isNullable: type.isNullable,
+					isNullable: type.isNullable || !!defaultValue,
 					isArray: transformedType.startsWith('Array'),
 					arrayLevels: transformedType.match(/Array/g)?.length,
 					isFromQuery: attributes.some((o) => o.name === 'FromQuery'),

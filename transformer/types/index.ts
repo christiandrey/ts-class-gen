@@ -7,6 +7,13 @@ export type PropertyAttribute = {
 	parameters: Array<AttributeParameter>;
 };
 
+export type ThunkFactory = {
+	/** @property The action to produce a thunk from. */
+	action: ControllerAction;
+	/** @property The controller the action originally belongs to. */
+	controller: string;
+};
+
 export type ControllerActionResponse = {
 	type?: string;
 	isArray: boolean;
@@ -88,4 +95,15 @@ export type GeneratedAdapter = {
 export type GeneratedController = {
 	name: string;
 	actions: Array<ControllerAction>;
+};
+
+export type GeneratedThunk = {
+	name: string;
+	data: string;
+};
+
+export type GeneratedThunkCollection = {
+	name: string;
+	data: string;
+	thunks: Array<GeneratedThunk>;
 };

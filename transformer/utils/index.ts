@@ -1,5 +1,5 @@
+import {ActionHttpMethod, ClassProperty, PropertyAttribute} from '../types';
 import {CSharpProperty, TypeEmitter} from '@fluffy-spoon/csharp-to-typescript-generator';
-import {ClassProperty, PropertyAttribute} from '../types';
 import {readDirAsync, readFileAsync, toCamelCase} from '../../utils';
 
 import {CSharpAttributeParameter} from '@fluffy-spoon/csharp-parser';
@@ -66,6 +66,14 @@ export function wrapType(child: string, parent?: string, wrap = true, repeat = 1
 	return repeat ? wrapType(wrapped, parent, wrap, repeat) : wrapped;
 }
 
+export function wrapString(text: string, prefix: string, suffix: string, wrap = true) {
+	if (!wrap) {
+		return text;
+	}
+
+	return prefix + text + suffix;
+}
+
 export function getChildType(type: string): string {
 	return type.match(/<([A-za-z]+)>/)?.[1] ?? type;
 }
@@ -79,8 +87,48 @@ export function getTsControllerName(controllerName: string) {
 	return controllerName.replace('Controller', '');
 }
 
-export function getTsControllerMethodName(controllerName: string) {
-	return controllerName.replace('Async', '').replace(/^Get/, 'Read');
+export function getTsControllerMethodName(actionName: string) {
+	return actionName.replace('Async', '').replace(/^Get/, 'Read');
+}
+
+export function getTsThunkName(options: {
+	actionName: string;
+	actionController: string;
+	actionHttpMethod: ActionHttpMethod;
+	thunkCollectionName: string;
+}) {
+	const {actionName, actionController, actionHttpMethod, thunkCollectionName} = options;
+	let thunkName = actionName.replace('Async', '').replace(/^Read/, 'Fetch');
+
+	if (
+		!thunkName.includes('Current') &&
+		!thunkName.includes('By') &&
+		actionController !== thunkCollectionName
+	) {
+		const conjunction = actionHttpMethod === 'post' ? 'For' : 'By';
+		thunkName = `${thunkName}${conjunction}${actionController}`;
+	}
+
+	if (!thunkName.includes(actionController)) {
+		if (actionHttpMethod === 'get' && thunkName.includes('By')) {
+			thunkName = thunkName.replace('By', `${actionController}By`);
+		} else {
+			thunkName = `${thunkName}${actionController}`;
+		}
+	}
+
+	return thunkName;
+}
+
+export function getType(options: {
+	name: string;
+	type: string;
+	isNullable?: boolean;
+	isArray?: boolean;
+	arrayLevels?: number;
+}) {
+	const {name, type, isNullable, isArray, arrayLevels = 0} = options;
+	return `${name}${isNullable ? '?' : ''}: ${wrapType(type, 'Array', isArray, arrayLevels)}`;
 }
 
 export function getClassesSize(source: string): number {

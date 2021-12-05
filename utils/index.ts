@@ -11,6 +11,9 @@ const _readdirAsync = promisify(readdir);
 const _writeFileAsync = promisify(writeFile);
 const _statAsync = promisify(stat);
 
+pluralize.addUncountableRule('auth');
+pluralize.addUncountableRule('storage');
+
 export function getPlural(word: string, count = 2): string {
 	return pluralize(word, count);
 }
