@@ -1,25 +1,31 @@
 import {
 	GeneratedController,
+	GeneratedEntity,
+	GeneratedNormalizationSchema,
+	GeneratedOption,
 	GeneratedThunk,
 	GeneratedThunkCollection,
-	ThunkFactory,
+	GeneratedThunkResponse,
+	ThunkGenerator,
+	ThunkGeneratorGroup,
 } from '../types';
 import {
+	arraySort,
 	arrayUnique,
 	createDirAsync,
 	createFileAsync,
 	getPlural,
-	isDefined,
+	isValidIndex,
 	removeDirAsync,
 	toCamelCase,
 	toKebabCase,
 } from '../../utils';
 import {
 	enterEmitterScope,
+	generateTsThunkName,
 	getTsClassName,
-	getTsThunkName,
 	getType,
-	isOptionsDto,
+	isPrimitive,
 	leaveEmitterScope,
 	wrapString,
 	wrapType,
@@ -28,150 +34,31 @@ import {
 import {TypeScriptEmitter} from '@fluffy-spoon/csharp-to-typescript-generator/dist/src/TypeScriptEmitter';
 import {paths} from '../paths';
 
-const ENTITY_THUNK_KEY_MAP: Record<string, string> = {
+const ENTITY_THUNK_GENERATOR_GROUP_MAP: Record<string, string> = {
 	LabScan: 'Lab',
 	LabTest: 'Lab',
 	LabTestResult: 'Lab',
 };
-
 const PAGINATED_QUERY_PARAMS = ['page', 'pageSize', 'query'];
 
-function generateThunk(
-	collectionName: string,
-	factory: ThunkFactory,
-	typescriptEmitter: TypeScriptEmitter,
-	normalizationSchemas: Array<string>,
-): GeneratedThunk {
-	const {action, controller} = factory;
-	const {name, httpMethod, params, response} = action;
-	const responseType = response.type;
-	const normalizedResponseType = responseType ? getTsClassName(responseType, true) : undefined;
-	const thunkName = getTsThunkName({
-		actionName: name,
-		actionController: controller,
-		actionHttpMethod: httpMethod,
-		thunkCollectionName: collectionName,
-	});
-
-	const stringifiedParams = params.map((o) => o.name).join(', ');
-	const nonPaginatedParams = params.filter((o) => !PAGINATED_QUERY_PARAMS.includes(o.name));
-	let paramsTypeChunk = `{${nonPaginatedParams.map(getType).join('; ')}}`;
-	paramsTypeChunk = wrapType(paramsTypeChunk, 'PaginatedQueryParams', response.isPaginated);
-	const paramsChunk = paramsTypeChunk.length ? `params: ${paramsTypeChunk}` : '';
-
-	enterEmitterScope(
-		typescriptEmitter,
-		`export const ${toCamelCase(thunkName)} = createTypedAsyncThunk(`,
-	);
-	typescriptEmitter.writeLine(
-		`'${toCamelCase(getPlural(collectionName))}/${toCamelCase(thunkName)}',`,
-	);
-	enterEmitterScope(typescriptEmitter, `async (${paramsChunk}) => {`);
-
-	if (paramsChunk.length) {
-		typescriptEmitter.writeLine(`const {${stringifiedParams}} = params;`);
-	}
-
-	typescriptEmitter.writeLine(
-		`const response = await api.${toCamelCase(getPlural(controller))}().${toCamelCase(
-			action.name,
-		)}(${stringifiedParams});`,
-	);
-
-	if (!responseType || !normalizedResponseType) {
-		typescriptEmitter.writeLine(`return response;`);
-	} else {
-		if (response.isPaginated) {
-			typescriptEmitter.writeLine('const meta = response.data.meta;');
-		}
-
-		const responseDataIsArray = response.isArray || response.isPaginated;
-		const responseDataType = toCamelCase(normalizedResponseType);
-		const responseData = responseDataIsArray ? getPlural(responseDataType) : responseDataType;
-		const responseCanNormalize = normalizationSchemas.some((o) => o === normalizedResponseType);
-
-		if (response.isArray || response.isPaginated) {
-			typescriptEmitter.writeLine(
-				`const ${responseData} = response.data.data.map((o) => new ${responseType}(o));`,
-			);
-		} else {
-			typescriptEmitter.writeLine(
-				`const ${responseData} = new ${responseType}(response.data.data);`,
-			);
-		}
-
-		if (responseCanNormalize) {
-			typescriptEmitter.writeLine(
-				`const normalized = safeNormalize<${normalizedResponseType}, ${getTsClassName(
-					responseType,
-					true,
-				)}Entities, ${wrapType(
-					'string',
-					'Array',
-					responseDataIsArray,
-				)}>(${responseData}, ${wrapString(
-					`${responseDataType}Schema`,
-					'[',
-					']',
-					responseDataIsArray,
-				)});`,
-			);
-			typescriptEmitter.writeLine(
-				`return ${response.isPaginated ? '{...normalized, meta}' : 'normalized'};`,
-			);
-		} else {
-			typescriptEmitter.writeLine(`return ${responseData}`);
-		}
-	}
-
-	leaveEmitterScope(typescriptEmitter, '},');
-	leaveEmitterScope(typescriptEmitter, ');');
-
-	return {
-		name: thunkName,
-		data: typescriptEmitter.output,
-	};
-}
-
-function generateThunkCollection(
-	name: string,
-	factories: Array<ThunkFactory>,
-	enums: Array<string>,
-	normalizationSchemas: Array<string>,
-): GeneratedThunkCollection {
-	const thunks: Array<GeneratedThunk> = [];
+function stringifyGeneratedThunkCollection(
+	thunks: Array<GeneratedThunk>,
+	imports: {
+		entities: Array<string>;
+		options: Array<string>;
+		typings: Array<string>;
+	},
+	normalizationSchemas: Array<GeneratedNormalizationSchema>,
+): string {
+	const {entities, options, typings} = imports;
 	const typescriptEmitter = new TypeScriptEmitter();
-
-	const entitiesImports = arrayUnique(
-		factories
-			.map((factory) => {
-				const {
-					action: {
-						response: {isPrimitive, type},
-					},
-				} = factory;
-				return isPrimitive ? undefined : type;
-			})
-			.filter(isDefined),
-	);
-	const paramsImports = factories.flatMap((o) =>
-		o.action.params.filter((p) => !p.isPrimitive).map((o) => o.type),
-	);
-
-	const typingsImports = arrayUnique(
-		paramsImports
-			.filter((o) => enums.includes(o))
-			.concat(
-				[
-					factories.some((o) => o.action.response.isPaginated) ? 'PaginatedQueryParams' : undefined,
-				].filter(isDefined),
-			),
-	);
-	const optionsImports = arrayUnique(
-		entitiesImports.filter(isOptionsDto).concat(paramsImports.filter(isOptionsDto)),
-	);
-	const schemasImports = entitiesImports.filter((entity) =>
-		normalizationSchemas.some((o) => o === getTsClassName(entity, true)),
+	const entitiesImports = arrayUnique(entities);
+	const optionsImports = arrayUnique(options);
+	const typingsImports = arrayUnique(typings);
+	const schemasImports = arrayUnique(
+		entitiesImports
+			.map((o) => getTsClassName(o, true))
+			.filter((entity) => normalizationSchemas.some((o) => o.name === entity)),
 	);
 
 	schemasImports.forEach((o) => {
@@ -195,6 +82,7 @@ function generateThunkCollection(
 	typescriptEmitter.writeLine(
 		`import {createTypedAsyncThunk, safeNormalize} from '../../../utils/redux';`,
 	);
+
 	typescriptEmitter.ensureNewParagraph();
 
 	entitiesImports.forEach((o) => {
@@ -204,63 +92,228 @@ function generateThunkCollection(
 	typescriptEmitter.writeLine(`import {api} from '../../../api';`);
 	typescriptEmitter.ensureNewParagraph();
 
-	for (const factory of factories) {
-		const thunk = generateThunk(name, factory, typescriptEmitter, normalizationSchemas);
-		thunks.push(thunk);
+	for (const thunk of thunks) {
+		typescriptEmitter.write(thunk.data);
 		typescriptEmitter.ensureNewParagraph();
 	}
 
-	return {
-		name,
-		data: typescriptEmitter.output,
-		thunks,
+	return typescriptEmitter.output;
+}
+
+function getThunkMapper(
+	group: ThunkGeneratorGroup,
+	imports: {
+		entities: Array<string>;
+		options: Array<string>;
+		typings: Array<string>;
+	},
+	config: {
+		entities: Array<GeneratedEntity>;
+		enums: Array<string>;
+		normalizationSchemas: Array<GeneratedNormalizationSchema>;
+		options: Array<GeneratedOption>;
+	},
+): (generator: ThunkGenerator) => GeneratedThunk {
+	const {entities, enums, normalizationSchemas, options} = config;
+
+	return (generator) => {
+		const {action, parent} = generator;
+		const {params, response} = action;
+		const responseType = response.type;
+		const normalizedResponseType = responseType ? getTsClassName(responseType, true) : undefined;
+		const typescriptEmitter = new TypeScriptEmitter();
+		const thunkName = generateTsThunkName({
+			actionName: action.name,
+			actionParentName: parent,
+			actionHttpMethod: action.httpMethod,
+			thunkGroupName: group.name,
+		});
+		const isPaginated =
+			response.isPaginated || params.some((o) => PAGINATED_QUERY_PARAMS.includes(o.name));
+		const nonPaginatedParams = params.filter((o) => !PAGINATED_QUERY_PARAMS.includes(o.name));
+		const baseThunkParams: Array<string> = nonPaginatedParams.map((o) => getType(o));
+		const thunkParams: Array<string> = isPaginated
+			? [
+					'params: ' +
+						(baseThunkParams.length
+							? wrapType(
+									`{${nonPaginatedParams.map((o) => getType(o)).join('; ')}}`,
+									'PaginatedQueryParams',
+							  )
+							: 'PaginatedQueryParams'),
+			  ]
+			: baseThunkParams;
+		const entitiesImports = params.filter((o) => entities.some((p) => p.name === o.type));
+		const optionsImports = params.filter((o) => options.some((p) => p.name === o.type));
+		const typingsImports = params.filter((o) => enums.includes(o.type));
+		const stringifiedParams =
+			thunkParams.length > 1 ? `params: {${thunkParams.join('; ')}}` : thunkParams[0] ?? '';
+
+		enterEmitterScope(
+			typescriptEmitter,
+			`export const ${toCamelCase(thunkName)} = createTypedAsyncThunk(`,
+		);
+		typescriptEmitter.writeLine(
+			`'${toCamelCase(getPlural(group.name))}/${toCamelCase(thunkName)}',`,
+		);
+		enterEmitterScope(typescriptEmitter, `async (${stringifiedParams}) => {`);
+
+		if (thunkParams.length > 1 || isPaginated) {
+			typescriptEmitter.writeLine(`const {${params.map((o) => o.name).join(', ')}} = params;`);
+		}
+
+		typescriptEmitter.writeLine(
+			`const response = await api.${toCamelCase(getPlural(parent))}().${toCamelCase(
+				action.name,
+			)}(${params.map((o) => o.name).join(', ')});`,
+		);
+
+		if (!normalizedResponseType || isPrimitive(normalizedResponseType)) {
+			typescriptEmitter.writeLine(`return response;`);
+		} else {
+			if (response.isPaginated) {
+				typescriptEmitter.writeLine('const meta = response.data.meta;');
+			}
+
+			const responseDataIsArray = response.isArray || response.isPaginated;
+			const responseDataType = toCamelCase(normalizedResponseType);
+			const responseCanNormalize = normalizationSchemas.some(
+				(o) => o.name === normalizedResponseType,
+			);
+
+			typescriptEmitter.writeLine(
+				responseDataIsArray
+					? `const responseData = response.data.data.map((o) => new ${responseType}(o));`
+					: `const responseData = new ${responseType}(response.data.data);`,
+			);
+
+			if (responseCanNormalize) {
+				typescriptEmitter.writeLine(
+					`const normalized = safeNormalize<${normalizedResponseType}, ${normalizedResponseType}Entities, ${wrapType(
+						'string',
+						'Array',
+						responseDataIsArray,
+					)}>(responseData, ${wrapString(
+						`${responseDataType}Schema`,
+						'[',
+						']',
+						responseDataIsArray,
+					)});`,
+				);
+				typescriptEmitter.writeLine(
+					`return ${response.isPaginated ? '{...normalized, meta}' : 'normalized'};`,
+				);
+			} else {
+				typescriptEmitter.writeLine(`return responseData;`);
+			}
+		}
+
+		leaveEmitterScope(typescriptEmitter, '},');
+		leaveEmitterScope(typescriptEmitter, ');');
+
+		imports.entities.push(
+			...entitiesImports
+				.map((o) => o.type)
+				.concat(responseType && !isPrimitive(responseType) ? responseType : []),
+		);
+
+		imports.typings.push(
+			...typingsImports.map((o) => o.type).concat(isPaginated ? 'PaginatedQueryParams' : []),
+		);
+
+		imports.options.push(...optionsImports.map((o) => o.type));
+
+		return {
+			name: thunkName,
+			data: typescriptEmitter.output,
+			response:
+				!!responseType && !isPrimitive(responseType)
+					? ({
+							type: responseType,
+							entities:
+								normalizationSchemas.find((o) => o.name === normalizedResponseType)
+									?.entitiesImports ?? [],
+					  } as GeneratedThunkResponse)
+					: undefined,
+		} as GeneratedThunk;
 	};
 }
 
-export async function transformToThunksAsync(
+function getThunkCollectionMapper(config: {
+	entities: Array<GeneratedEntity>;
+	enums: Array<string>;
+	normalizationSchemas: Array<GeneratedNormalizationSchema>;
+	options: Array<GeneratedOption>;
+}): (group: ThunkGeneratorGroup) => GeneratedThunkCollection {
+	return (group) => {
+		const imports = {
+			entities: new Array<string>(),
+			options: new Array<string>(),
+			typings: new Array<string>(),
+		};
+		const thunks = group.generators.map(getThunkMapper(group, imports, config));
+		return {
+			name: group.name,
+			thunks,
+			data: stringifyGeneratedThunkCollection(thunks, imports, config.normalizationSchemas),
+		};
+	};
+}
+
+function getThunkGeneratorGroups(
 	controllers: Array<GeneratedController>,
-	enums: Array<string>,
-	normalizationSchemas: Array<string>,
-) {
+): Array<ThunkGeneratorGroup> {
+	const groups: Array<ThunkGeneratorGroup> = [];
+	const pushToGroup = (group: string, generator: ThunkGenerator) => {
+		const index = groups.findIndex((o) => o.name === group);
+		isValidIndex(index)
+			? groups[index].generators.push(generator)
+			: groups.push({
+					name: group,
+					generators: [generator],
+			  });
+	};
+
+	for (const controller of controllers) {
+		const {name: parent, actions} = controller;
+		const parentEntities = [parent, parent + 'Lite'];
+
+		for (const action of actions) {
+			const {
+				response: {type: responseType},
+			} = action;
+			const thunkGenerator: ThunkGenerator = {parent, action};
+			const useParentAsGroup =
+				!responseType ||
+				isPrimitive(responseType) ||
+				parentEntities.includes(responseType) ||
+				ENTITY_THUNK_GENERATOR_GROUP_MAP[responseType] === parent;
+
+			pushToGroup(useParentAsGroup ? parent : getTsClassName(responseType, true), thunkGenerator);
+		}
+	}
+
+	return arraySort(groups, false, (o) => o.name);
+}
+
+export async function transformToThunksAsync(config: {
+	controllers: Array<GeneratedController>;
+	entities: Array<GeneratedEntity>;
+	enums: Array<string>;
+	normalizationSchemas: Array<GeneratedNormalizationSchema>;
+	options: Array<GeneratedOption>;
+}) {
+	const {controllers, normalizationSchemas, entities} = config;
 	const dir = paths.THUNKS_FOLDER;
 
 	await removeDirAsync(dir);
 	await createDirAsync(dir);
 
-	controllers = controllers.filter(({name}) => normalizationSchemas.some((o) => o.includes(name)));
-
-	const thunkFactories: Record<string, Array<ThunkFactory>> = {};
-	const pushThunkFactory = (key: string, thunkFactory: ThunkFactory) => {
-		const thunkKeys = Object.keys(thunkFactories);
-		const thunkKey = ENTITY_THUNK_KEY_MAP[key] ?? thunkKeys.find((o) => o === key) ?? key;
-		thunkFactories[thunkKey] = [...(thunkFactories[thunkKey] ?? []), thunkFactory];
-	};
-
-	for (const controller of controllers) {
-		const {name: controllerName, actions: controllerActions} = controller;
-
-		for (const action of controllerActions) {
-			const responseType = action.response.type;
-			const thunkFactory: ThunkFactory = {
-				action,
-				controller: controllerName,
-			};
-
-			if (
-				!responseType ||
-				[controllerName, `${controllerName}Lite`].includes(responseType) ||
-				ENTITY_THUNK_KEY_MAP[responseType] === controllerName
-			) {
-				pushThunkFactory(controllerName, thunkFactory);
-			} else {
-				pushThunkFactory(getTsClassName(responseType, true), thunkFactory);
-			}
-		}
-	}
-
-	const thunkCollections = Object.entries(thunkFactories).map(([controller, factories]) =>
-		generateThunkCollection(controller, factories, enums, normalizationSchemas),
+	const thunkControllers = controllers.filter(({name}) =>
+		normalizationSchemas.some((o) => o.name.includes(name)),
 	);
+	const thunkGeneratorGroups = getThunkGeneratorGroups(thunkControllers);
+	const thunkCollections = thunkGeneratorGroups.map(getThunkCollectionMapper(config));
 	const exports = thunkCollections.map(({name}) => `export * from './${toKebabCase(name)}';`);
 
 	for (const {name, data} of thunkCollections) {

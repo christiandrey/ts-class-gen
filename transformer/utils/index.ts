@@ -1,6 +1,6 @@
 import {ActionHttpMethod, ClassProperty, PropertyAttribute} from '../types';
 import {CSharpProperty, TypeEmitter} from '@fluffy-spoon/csharp-to-typescript-generator';
-import {readDirAsync, readFileAsync, toCamelCase} from '../../utils';
+import {nil, notNil, readDirAsync, readFileAsync, toCamelCase} from '../../utils';
 
 import {CSharpAttributeParameter} from '@fluffy-spoon/csharp-parser';
 import {TypeScriptEmitter} from '@fluffy-spoon/csharp-to-typescript-generator/dist/src/TypeScriptEmitter';
@@ -120,15 +120,56 @@ export function getTsThunkName(options: {
 	return thunkName;
 }
 
-export function getType(options: {
-	name: string;
-	type: string;
-	isNullable?: boolean;
-	isArray?: boolean;
-	arrayLevels?: number;
+export function generateTsThunkName(options: {
+	actionName: string;
+	actionParentName: string;
+	actionHttpMethod: ActionHttpMethod;
+	thunkGroupName: string;
 }) {
-	const {name, type, isNullable, isArray, arrayLevels = 0} = options;
-	return `${name}${isNullable ? '?' : ''}: ${wrapType(type, 'Array', isArray, arrayLevels)}`;
+	const {actionName, actionParentName, actionHttpMethod, thunkGroupName} = options;
+	let thunkName = actionName.replace('Async', '').replace(/^Read/, 'Fetch');
+
+	if (
+		!thunkName.includes('Current') &&
+		!thunkName.includes('By') &&
+		!thunkName.includes('For') &&
+		actionParentName !== thunkGroupName
+	) {
+		const conjunction = actionHttpMethod === 'post' ? 'For' : 'By';
+		thunkName = `${thunkName}${conjunction}${actionParentName}`;
+	}
+
+	if (!thunkName.includes(actionParentName)) {
+		if (actionHttpMethod === 'get' && thunkName.includes('By')) {
+			thunkName = thunkName.replace('By', `${actionParentName}By`);
+		} else {
+			thunkName = `${thunkName}${actionParentName}`;
+		}
+	}
+
+	return thunkName;
+}
+
+export function getType(
+	options: {
+		name: string;
+		type: string;
+		isNullable?: boolean;
+		defaultValue?: unknown;
+		isArray?: boolean;
+		arrayLevels?: number;
+	},
+	useDefaultValue = false,
+) {
+	const {name, type, isNullable, defaultValue, isArray, arrayLevels = 0} = options;
+	const defaultValueIsPrimitive = isPrimitive(typeof defaultValue);
+	return `${name}${
+		isNullable && (!useDefaultValue || nil(defaultValue) || !defaultValueIsPrimitive) ? '?' : ''
+	}${
+		isNullable && useDefaultValue && notNil(defaultValue) && defaultValueIsPrimitive
+			? ` = ${defaultValue}`
+			: `: ${wrapType(type, 'Array', isArray, arrayLevels)}`
+	}`;
 }
 
 export function getClassesSize(source: string): number {

@@ -24,7 +24,8 @@ import {paths} from '../paths';
 function generateEntity(source: string, index = 0): GeneratedEntity {
 	let name = '';
 
-	const enums: Array<string> = [];
+	let entitiesImports: Array<string> = [];
+	let typingsImports: Array<string> = [];
 	const emitter = new Emitter(source);
 	const data = emitter.emit({
 		file: {
@@ -37,15 +38,14 @@ function generateEntity(source: string, index = 0): GeneratedEntity {
 				const entityParents = entityClass.inheritsFrom.map((o) => getTsClassName(o.name));
 				const entityClassName = (name = getTsClassName(entityClass.name));
 				const entityProperties = entityClass.properties.map(getClassPropertyMapper(typeEmitter));
-				const entitiesImports = arrayUnique(
+
+				entitiesImports = arrayUnique(
 					entityProperties
 						.filter(isClass)
 						.map((o) => o.type)
 						.concat(entityParents),
 				);
-				const typingsImports = arrayUnique(
-					entityProperties.filter((o) => o.isEnum).map((o) => o.type),
-				);
+				typingsImports = arrayUnique(entityProperties.filter((o) => o.isEnum).map((o) => o.type));
 
 				if (typingsImports.length) {
 					typescriptEmitter.writeLine(`import {${typingsImports.join(', ')}} from '../typings';`);
@@ -66,7 +66,6 @@ function generateEntity(source: string, index = 0): GeneratedEntity {
 					typescriptEmitter.writeLine(
 						`${name}${isNullable ? '?' : ''}: ${getFullPropertyType(type, isArray, arrayLevels)};`,
 					);
-					isEnum && enums.push(type);
 				});
 
 				typescriptEmitter.ensureNewParagraph();
@@ -94,7 +93,8 @@ function generateEntity(source: string, index = 0): GeneratedEntity {
 	return {
 		name,
 		data,
-		enums: arrayUnique(enums),
+		entitiesImports,
+		typingsImports,
 	};
 }
 

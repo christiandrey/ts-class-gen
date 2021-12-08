@@ -38,6 +38,7 @@ async function generateNormalizationSchema(
 	const typeEmitter = new TypeEmitter(typescriptEmitter);
 	const entityClass = file.getAllClassesRecursively()[index];
 	const entityClassName = (name = getTsClassName(entityClass.name));
+	const entitiesImports: Array<string> = [];
 
 	if (isLiteDto(entityClassName) || isBaseDto(entityClassName)) {
 		return;
@@ -57,6 +58,7 @@ async function generateNormalizationSchema(
 		typescriptEmitter.writeLine(
 			`import {${o}Entities, ${toCamelCase(o)}Schema} from './${toKebabCase(o)}';`,
 		);
+		entitiesImports.push(o);
 	});
 
 	typescriptEmitter.ensureNewParagraph();
@@ -109,6 +111,7 @@ async function generateNormalizationSchema(
 		return {
 			name,
 			data,
+			entitiesImports,
 		};
 	}
 }

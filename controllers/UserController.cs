@@ -43,7 +43,7 @@ namespace HealthGyro.Controllers
       }
 
       [HttpGet("export"), Authorize(Roles = nameof(UserRoleType.Admin))]
-      public async Task<FileContentResult> ExportAsync(int page, int pageSize, string query = null)
+      public async Task<FileContentResult> ExportAsync(int page = 1, int pageSize = 30, string query = null)
       {
          var csv = await _userService.GetUsersCsvAsync(page, pageSize, query);
 

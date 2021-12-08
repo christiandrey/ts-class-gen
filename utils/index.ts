@@ -49,9 +49,34 @@ export function isDefined<T>(argument: T | undefined): argument is T {
 	return argument !== undefined;
 }
 
+export function isValidIndex(index: number) {
+	return !!~index;
+}
+
 export function arrayUnique<T>(list: Array<T>, sort = true): Array<T> {
 	const result = Array.from(new Set(list));
 	return sort ? result.sort() : result;
+}
+
+export function arraySort<T>(
+	list: Array<T>,
+	descending = false,
+	predicate: (o: T) => T | T[keyof T] = (o) => o,
+) {
+	return list.sort((a, b) => {
+		const predA = predicate(a);
+		const predB = predicate(b);
+		const sortResult = predA > predB ? 1 : predB > predA ? -1 : 0;
+		return descending ? sortResult * -1 : sortResult;
+	});
+}
+
+export function notNil<T>(value?: T | null): value is T {
+	return typeof value !== 'undefined' && value !== null;
+}
+
+export function nil<T>(value?: T | null): value is undefined | null {
+	return !notNil(value);
 }
 
 export async function pathExistsAsync(path: PathLike) {

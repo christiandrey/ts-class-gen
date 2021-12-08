@@ -12,6 +12,7 @@ import {
 	createFileAsync,
 	getPlural,
 	isDefined,
+	notNil,
 	readDirAsync,
 	removeDirAsync,
 	replaceAll,
@@ -66,7 +67,7 @@ function generateActionResponse(
 			response.isPaginated = true;
 		}
 
-		if (name.startsWith('Array')) {
+		if (name.startsWith('Array') || name.startsWith('IEnumerable')) {
 			response.isArray = true;
 			response.arrayLevels = (response.arrayLevels ?? 0) + 1;
 		}
@@ -82,7 +83,7 @@ function generateActionResponse(
 
 function generateActionContent(action: ControllerAction): string {
 	const {params, response, routeChunks, httpMethod} = action;
-	const paramsChunk = `(${params.map(getType).join(', ')})`;
+	const paramsChunk = `(${params.map((o) => getType(o, true)).join(', ')})`;
 
 	const responseTypeChunk = `<${wrapType(
 		wrapType(response.type ?? 'ApiResponse', 'Array', response.isArray, response.arrayLevels),
@@ -146,11 +147,12 @@ function getControllerActionMapper(
 					name,
 					type: getTsClassName(getChildType(transformedType)),
 					isPrimitive: isPrimitive(getChildType(transformedType), extraPrimitiveTypes),
-					isNullable: type.isNullable || !!defaultValue,
+					isNullable: type.isNullable || notNil(defaultValue),
 					isArray: transformedType.startsWith('Array'),
 					arrayLevels: transformedType.match(/Array/g)?.length,
 					isFromQuery: attributes.some((o) => o.name === 'FromQuery'),
 					isFromRoute: routeChunks.some((o) => o.isVariable && o.name === name),
+					defaultValue,
 				};
 			},
 		);

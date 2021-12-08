@@ -108,7 +108,7 @@ index 3772839..728ab75 100644
      getTypeConstraintRegex(capture: boolean): string;
      getGenericNameRegex(capture: boolean, captureTypeName: boolean, captureGenericsContent: boolean): string;
 diff --git a/node_modules/@fluffy-spoon/csharp-parser/dist/src/RegExHelper.js b/node_modules/@fluffy-spoon/csharp-parser/dist/src/RegExHelper.js
-index f282d47..457becc 100644
+index f282d47..19c1b3a 100644
 --- a/node_modules/@fluffy-spoon/csharp-parser/dist/src/RegExHelper.js
 +++ b/node_modules/@fluffy-spoon/csharp-parser/dist/src/RegExHelper.js
 @@ -35,6 +35,9 @@ var RegExHelper = /** @class */ (function () {
@@ -149,7 +149,7 @@ index f282d47..457becc 100644
          return this.wrapInGroup(capture, true, "[\\w.]+");
      };
 +    RegExHelper.prototype.getNameWithBracketsRegex = function (capture) {
-+        return this.wrapInGroup(capture, true, "[\\w.()]+");
++        return this.wrapInGroup(capture, true, '[\\w.()+\\s"]+');
 +    };
      RegExHelper.prototype.getGenericTypeWrapperRegex = function (capture, captureContents) {
          return this.wrapInGroup(capture, true, "<" + this.wrapInGroup(captureContents, true, "[^=]+") + ">") + "??";

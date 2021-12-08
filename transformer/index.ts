@@ -3,7 +3,7 @@ import {transformToApiAsync} from './api';
 import {transformToEntitiesAsync} from './entities';
 import {transformToNormalizationSchemasAsync} from './schemas/normalization';
 import {transformToOptionsAsync} from './options';
-import {transformToThunksAsync} from './thunks';
+import {transformToThunksAsync} from './thunks/index';
 import {transformToTypingsAsync} from './enums';
 import {transformToValidationSchemasAsync} from './schemas/validation';
 
@@ -14,12 +14,14 @@ async function runAsync() {
 	const normalizationSchemas = await transformToNormalizationSchemasAsync();
 	const adapters = await transformToAdaptersAsync(normalizationSchemas.map((o) => o.name));
 	const api = await transformToApiAsync();
-	const enums = [...entities, ...options].flatMap((o) => o.enums);
-	const thunkCollections = await transformToThunksAsync(
-		api,
+	const enums = [...entities, ...options].flatMap((o) => o.typingsImports);
+	const thunkCollections = await transformToThunksAsync({
+		controllers: api,
+		entities,
 		enums,
-		normalizationSchemas.map((o) => o.name),
-	);
+		normalizationSchemas,
+		options,
+	});
 
 	await transformToTypingsAsync(enums);
 
