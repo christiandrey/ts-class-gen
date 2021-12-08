@@ -1,9 +1,9 @@
-import {getPlural} from '../utils';
 import {transformToAdaptersAsync} from './adapters';
 import {transformToApiAsync} from './api';
 import {transformToEntitiesAsync} from './entities';
 import {transformToNormalizationSchemasAsync} from './schemas/normalization';
 import {transformToOptionsAsync} from './options';
+import {transformToThunksAsync} from './thunks/index';
 import {transformToTypingsAsync} from './enums';
 import {transformToValidationSchemasAsync} from './schemas/validation';
 
@@ -14,22 +14,26 @@ async function runAsync() {
 	const normalizationSchemas = await transformToNormalizationSchemasAsync();
 	const adapters = await transformToAdaptersAsync(normalizationSchemas.map((o) => o.name));
 	const api = await transformToApiAsync();
+	const enums = [...entities, ...options].flatMap((o) => o.typingsImports);
+	const thunkCollections = await transformToThunksAsync({
+		controllers: api,
+		entities,
+		enums,
+		normalizationSchemas,
+		options,
+	});
 
-	await transformToTypingsAsync([...entities, ...options].flatMap((o) => o.enums));
+	await transformToTypingsAsync(enums);
 
-	console.log(
-		`Generated ${entities.length} ${getPlural('entity', entities.length)}, ${
-			options.length
-		} dto ${getPlural('type', options.length)}, ${validationSchemas.length} validation ${getPlural(
-			'schema',
-			validationSchemas.length,
-		)}, ${normalizationSchemas.length} normalization ${getPlural(
-			'schema',
-			normalizationSchemas.length,
-		)}, ${adapters.length} ${getPlural('adapter', adapters.length)} and ${
-			api.flatMap((o) => o.actions).length
-		} api ${getPlural('endpoint', api.flatMap((o) => o.actions).length)}.`,
-	);
+	console.table({
+		Entities: entities.length,
+		Options: options.length,
+		ValidationSchemas: validationSchemas.length,
+		NormalizationSchemas: normalizationSchemas.length,
+		Adapters: adapters.length,
+		Endpoints: api.flatMap((o) => o.actions).length,
+		Thunks: thunkCollections.flatMap((o) => o.thunks).length,
+	});
 }
 
 async function tempAsync() {}

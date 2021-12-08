@@ -23,10 +23,10 @@ import {join} from 'path';
 import {paths} from '../paths';
 
 function generateOption(source: string, index = 0): GeneratedOption {
+	let name = '';
 	let entitiesImports: Array<string> = [];
 	let typingsImports: Array<string> = [];
 
-	const enums: Array<string> = [];
 	const emitter = new Emitter(source);
 	const data = emitter.emit({
 		file: {
@@ -35,7 +35,7 @@ function generateOption(source: string, index = 0): GeneratedOption {
 
 				const typeEmitter = new TypeEmitter(typescriptEmitter);
 				const entityClass = file.getAllClassesRecursively()[index];
-				const entityClassName = getTsClassName(entityClass.name);
+				const entityClassName = (name = getTsClassName(entityClass.name));
 				const entityProperties = entityClass.properties.map(getClassPropertyMapper(typeEmitter));
 
 				entitiesImports = arrayUnique(entityProperties.filter(isClass).map((o) => o.type));
@@ -47,7 +47,6 @@ function generateOption(source: string, index = 0): GeneratedOption {
 					typescriptEmitter.writeLine(
 						`${name}${isNullable ? '?' : ''}: ${getFullPropertyType(type, isArray, arrayLevels)};`,
 					);
-					isEnum && enums.push(type);
 				});
 
 				typescriptEmitter.leaveScope();
@@ -56,8 +55,8 @@ function generateOption(source: string, index = 0): GeneratedOption {
 	});
 
 	return {
+		name,
 		data,
-		enums: arrayUnique(enums),
 		entitiesImports,
 		typingsImports,
 	};

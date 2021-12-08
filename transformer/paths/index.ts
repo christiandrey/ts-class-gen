@@ -12,6 +12,7 @@ export const paths = {
 	ENUMS_FOLDER: join(ROOT, 'enums'),
 	ENTITIES_FOLDER: join(ROOT, 'entities'),
 	NORMALIZATION_SCHEMAS_FOLDER: join(ROOT, 'schemas', 'normalization'),
+	THUNKS_FOLDER: join(ROOT, 'thunks'),
 	TYPINGS_FOLDER: join(ROOT, 'typings'),
 	VALIDATION_SCHEMAS_FOLDER: join(ROOT, 'schemas', 'validation'),
 };

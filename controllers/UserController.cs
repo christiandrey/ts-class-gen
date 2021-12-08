@@ -43,7 +43,7 @@ namespace HealthGyro.Controllers
       }
 
       [HttpGet("export"), Authorize(Roles = nameof(UserRoleType.Admin))]
-      public async Task<FileContentResult> ExportAsync(int page, int pageSize, string query = null)
+      public async Task<FileContentResult> ExportAsync(int page = 1, int pageSize = 30, string query = null)
       {
          var csv = await _userService.GetUsersCsvAsync(page, pageSize, query);
 
@@ -51,7 +51,7 @@ namespace HealthGyro.Controllers
       }
 
       [HttpGet("export/all"), Authorize(Roles = nameof(UserRoleType.Admin))]
-      public async Task<FileContentResult> ExportAsync()
+      public async Task<FileContentResult> ExportAllAsync()
       {
          var csv = await _userService.GetUsersCsvAsync();
 
@@ -59,7 +59,7 @@ namespace HealthGyro.Controllers
       }
 
       [HttpGet("{userId:guid}")]
-      public async Task<ActionResult<Response<UserDto>>> GetUserProfileAsync(Guid userId)
+      public async Task<ActionResult<Response<UserDto>>> GetUserProfileByIdAsync(Guid userId)
       {
          var user = await _userService.GetByIdAsync(userId);
 
@@ -130,7 +130,7 @@ namespace HealthGyro.Controllers
       }
 
       [HttpGet("profile")]
-      public async Task<ActionResult<Response<UserDto>>> GetUserProfileAsync()
+      public async Task<ActionResult<Response<UserDto>>> GetCurrentUserProfileAsync()
       {
          var user = await _userService.GetByIdAsync(GetUserId());
 
@@ -138,7 +138,7 @@ namespace HealthGyro.Controllers
       }
 
       [HttpGet("current/calendar-events/{startDate:datetime}/{endDate:datetime}")]
-      public async Task<ActionResult<Response<IEnumerable<CalendarEventDto>>>> GetCalendarEventsAsync(DateTime startDate, DateTime endDate)
+      public async Task<ActionResult<Response<IEnumerable<CalendarEventDto>>>> GetCurrentUserCalendarEventsAsync(DateTime startDate, DateTime endDate)
       {
          var userId = GetUserId();
 
@@ -149,7 +149,7 @@ namespace HealthGyro.Controllers
 
       [Authorize(Roles = nameof(UserRoleType.NonMedic))]
       [HttpGet("{id:guid}/calendar-events/{startDate:datetime}/{endDate:datetime}")]
-      public async Task<ActionResult<Response<IEnumerable<CalendarEventDto>>>> GetCalendarEventsAsync(Guid id, DateTime startDate, DateTime endDate)
+      public async Task<ActionResult<Response<IEnumerable<CalendarEventDto>>>> GetCalendarEventsByUserAsync(Guid id, DateTime startDate, DateTime endDate)
       {
          var calendarEvents = await _calendarEventService.GetByParticipantAsync(id, startDate, endDate);
 

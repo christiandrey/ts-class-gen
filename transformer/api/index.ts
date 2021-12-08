@@ -12,6 +12,7 @@ import {
 	createFileAsync,
 	getPlural,
 	isDefined,
+	notNil,
 	readDirAsync,
 	removeDirAsync,
 	replaceAll,
@@ -25,6 +26,7 @@ import {
 	getTsClassName,
 	getTsControllerMethodName,
 	getTsControllerName,
+	getType,
 	isNotBaseController,
 	isPrimitive,
 	wrapType,
@@ -65,7 +67,7 @@ function generateActionResponse(
 			response.isPaginated = true;
 		}
 
-		if (name.startsWith('Array')) {
+		if (name.startsWith('Array') || name.startsWith('IEnumerable')) {
 			response.isArray = true;
 			response.arrayLevels = (response.arrayLevels ?? 0) + 1;
 		}
@@ -81,17 +83,7 @@ function generateActionResponse(
 
 function generateActionContent(action: ControllerAction): string {
 	const {params, response, routeChunks, httpMethod} = action;
-	const paramsChunk = `(${params
-		.map(
-			(o) =>
-				`${o.name}${o.isNullable ? '?' : ''}: ${wrapType(
-					o.type,
-					'Array',
-					o.isArray,
-					o.arrayLevels,
-				)}`,
-		)
-		.join(', ')})`;
+	const paramsChunk = `(${params.map((o) => getType(o, true)).join(', ')})`;
 
 	const responseTypeChunk = `<${wrapType(
 		wrapType(response.type ?? 'ApiResponse', 'Array', response.isArray, response.arrayLevels),
@@ -148,18 +140,19 @@ function getControllerActionMapper(
 			parameters: o.parameters.map(getAttributeParameter),
 		}));
 		const params: Array<ControllerActionParam> = method.parameters.map(
-			({name, type, attributes}) => {
+			({name, type, defaultValue, attributes}) => {
 				const transformedType = typeEmitter.convertTypeToTypeScript(type);
 
 				return {
 					name,
 					type: getTsClassName(getChildType(transformedType)),
 					isPrimitive: isPrimitive(getChildType(transformedType), extraPrimitiveTypes),
-					isNullable: type.isNullable,
+					isNullable: type.isNullable || notNil(defaultValue),
 					isArray: transformedType.startsWith('Array'),
 					arrayLevels: transformedType.match(/Array/g)?.length,
 					isFromQuery: attributes.some((o) => o.name === 'FromQuery'),
 					isFromRoute: routeChunks.some((o) => o.isVariable && o.name === name),
+					defaultValue,
 				};
 			},
 		);

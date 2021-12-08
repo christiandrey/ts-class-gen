@@ -7,6 +7,16 @@ export type PropertyAttribute = {
 	parameters: Array<AttributeParameter>;
 };
 
+export type ThunkGenerator = {
+	parent: string;
+	action: ControllerAction;
+};
+
+export type ThunkGeneratorGroup = {
+	name: string;
+	generators: Array<ThunkGenerator>;
+};
+
 export type ControllerActionResponse = {
 	type?: string;
 	isArray: boolean;
@@ -22,6 +32,7 @@ export type ControllerActionParam = {
 	isNullable: boolean;
 	isArray: boolean;
 	arrayLevels?: number;
+	defaultValue?: unknown;
 	isFromQuery?: boolean;
 	isFromRoute?: boolean;
 };
@@ -56,7 +67,8 @@ export type ClassProperty = {
 export type GeneratedEntity = {
 	name: string;
 	data: string;
-	enums: Array<string>;
+	entitiesImports: Array<string>;
+	typingsImports: Array<string>;
 };
 
 export type GeneratedEnum = {
@@ -64,8 +76,8 @@ export type GeneratedEnum = {
 };
 
 export type GeneratedOption = {
+	name: string;
 	data: string;
-	enums: Array<string>;
 	entitiesImports: Array<string>;
 	typingsImports: Array<string>;
 };
@@ -78,6 +90,7 @@ export type GeneratedValidationSchema = {
 export type GeneratedNormalizationSchema = {
 	name: string;
 	data: string;
+	entitiesImports: Array<string>;
 };
 
 export type GeneratedAdapter = {
@@ -88,4 +101,21 @@ export type GeneratedAdapter = {
 export type GeneratedController = {
 	name: string;
 	actions: Array<ControllerAction>;
+};
+
+export type GeneratedThunkResponse = {
+	type: string;
+	entities: Array<string>;
+};
+
+export type GeneratedThunk = {
+	name: string;
+	data: string;
+	response?: GeneratedThunkResponse;
+};
+
+export type GeneratedThunkCollection = {
+	name: string;
+	data: string;
+	thunks: Array<GeneratedThunk>;
 };
