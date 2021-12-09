@@ -17,6 +17,11 @@ export type ThunkGeneratorGroup = {
 	generators: Array<ThunkGenerator>;
 };
 
+export type SliceGenerator = {
+	name: string;
+	thunks: Array<string>;
+};
+
 export type ControllerActionResponse = {
 	type?: string;
 	isArray: boolean;
@@ -118,4 +123,9 @@ export type GeneratedThunkCollection = {
 	name: string;
 	data: string;
 	thunks: Array<GeneratedThunk>;
+};
+
+export type GeneratedSlice = {
+	name: string;
+	data: string;
 };

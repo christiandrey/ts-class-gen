@@ -10,6 +10,7 @@ adapters/**/*.*
 api/**/*.*
 entities/**/*.*
 schemas/**/*.*
+slices/**/*.*
 thunks/**/*.*
 typings/**/*.*
 .rpt2_cache

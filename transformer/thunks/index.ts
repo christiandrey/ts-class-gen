@@ -100,6 +100,20 @@ function stringifyGeneratedThunkCollection(
 	return typescriptEmitter.output;
 }
 
+function getFlattenedEntities(
+	entity: string,
+	normalizationSchemas: Array<GeneratedNormalizationSchema>,
+): Array<string> {
+	const flattenedEntities: Array<string> = [entity];
+	const childEntities = normalizationSchemas.find((o) => o.name === entity)?.entitiesImports ?? [];
+
+	for (const childEntity of childEntities) {
+		flattenedEntities.push(...getFlattenedEntities(childEntity, normalizationSchemas));
+	}
+
+	return arrayUnique(flattenedEntities);
+}
+
 function getThunkMapper(
 	group: ThunkGeneratorGroup,
 	imports: {
@@ -227,12 +241,13 @@ function getThunkMapper(
 			name: thunkName,
 			data: typescriptEmitter.output,
 			response:
-				!!responseType && !isPrimitive(responseType)
+				!!responseType && !!normalizedResponseType && !isPrimitive(responseType)
 					? ({
 							type: responseType,
-							entities:
-								normalizationSchemas.find((o) => o.name === normalizedResponseType)
-									?.entitiesImports ?? [],
+							entities: getFlattenedEntities(normalizedResponseType, normalizationSchemas),
+							// entities:
+							// 	normalizationSchemas.find((o) => o.name === normalizedResponseType)
+							// 		?.entitiesImports ?? [],
 					  } as GeneratedThunkResponse)
 					: undefined,
 		} as GeneratedThunk;
@@ -303,7 +318,7 @@ export async function transformToThunksAsync(config: {
 	normalizationSchemas: Array<GeneratedNormalizationSchema>;
 	options: Array<GeneratedOption>;
 }) {
-	const {controllers, normalizationSchemas, entities} = config;
+	const {controllers, normalizationSchemas} = config;
 	const dir = paths.THUNKS_FOLDER;
 
 	await removeDirAsync(dir);
