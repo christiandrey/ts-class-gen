@@ -4,6 +4,7 @@ namespace HealthGyro.Models.Dtos
 {
    public class PlanSubscriptionDto : BaseEntityDto
    {
+      public Guid HospitalId { get; set; }
       public Guid PaymentPlanId { get; set; }
       public DateTime ExpiresAt { get; set; }
       public int Medics { get; set; }

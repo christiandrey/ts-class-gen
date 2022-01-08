@@ -24,7 +24,9 @@ namespace HealthGyro.Controllers
    {
       private readonly IActivityLogService _activityLogService;
       private readonly IBillingItemService _billingItemService;
+      private readonly ICalendarEventService _calendarEventService;
       private readonly IDataRangeService _dataRangeService;
+      private readonly IGuestService _guestService;
       private readonly IHospitalService _hospitalService;
       private readonly IInvoiceService _invoiceService;
       private readonly ILabService _labService;
@@ -34,12 +36,15 @@ namespace HealthGyro.Controllers
       private readonly IPatientService _patientService;
       private readonly IPlanSubscriptionService _planSubscriptionService;
       private readonly ITransactionService _transactionService;
+      private readonly IUserService _userService;
       private readonly IMapper _mapper;
 
       public HospitalController(
          IActivityLogService activityLogService,
          IBillingItemService billingItemService,
+         ICalendarEventService calendarEventService,
          IDataRangeService dataRangeService,
+         IGuestService guestService,
          IHospitalService hospitalService,
          IInvoiceService invoiceService,
          ILabService labService,
@@ -49,11 +54,14 @@ namespace HealthGyro.Controllers
          IPatientService patientService,
          IPlanSubscriptionService planSubscriptionService,
          ITransactionService transactionService,
+         IUserService userService,
          IMapper mapper) : base(mapper)
       {
          _activityLogService = activityLogService;
          _billingItemService = billingItemService;
+         _calendarEventService = calendarEventService;
          _dataRangeService = dataRangeService;
+         _guestService = guestService;
          _hospitalService = hospitalService;
          _invoiceService = invoiceService;
          _labService = labService;
@@ -63,6 +71,7 @@ namespace HealthGyro.Controllers
          _patientService = patientService;
          _planSubscriptionService = planSubscriptionService;
          _transactionService = transactionService;
+         _userService = userService;
          _mapper = mapper;
       }
 
@@ -71,6 +80,48 @@ namespace HealthGyro.Controllers
       public async Task<ActionResult<Response<HospitalDto>>> CreateHospitalAsync(HospitalCreationOptionsDto options)
       {
          var hospital = await _hospitalService.CreateHospitalAsync(options);
+
+         return Ok(_mapper.Map<HospitalDto>(hospital));
+      }
+
+      [HttpGet("current")]
+      public async Task<ActionResult<Response<HospitalDto>>> GetCurrentHospitalAsync()
+      {
+         var userId = GetUserId();
+
+         var user = await _userService.GetByIdAsync(userId, true);
+
+         Hospital hospital = null;
+
+         if (_userService.IsInRole(user, UserRoleType.Manager))
+         {
+            hospital = (await _managerService.GetByUserIdAsync(userId, true)).Hospital;
+         }
+
+         if (_userService.IsInRole(user, UserRoleType.Medic))
+         {
+            hospital = (await _medicService.GetByUserIdAsync(userId, true)).Hospital;
+         }
+
+         if (_userService.IsInRole(user, UserRoleType.NonMedic))
+         {
+            hospital = (await _nonMedicService.GetByUserIdAsync(userId, true)).Hospital;
+         }
+
+         if (_userService.IsInRole(user, UserRoleType.Guest))
+         {
+            hospital = (await _guestService.GetByUserIdAsync(userId, true)).Patient.Hospital;
+         }
+
+         if (_userService.IsInRole(user, UserRoleType.Patient))
+         {
+            hospital = (await _patientService.GetByUserIdAsync(userId, true)).Hospital;
+         }
+
+         if (hospital == null)
+         {
+            return Forbid();
+         }
 
          return Ok(_mapper.Map<HospitalDto>(hospital));
       }
@@ -180,6 +231,15 @@ namespace HealthGyro.Controllers
          return Ok(_mapper.Map<NonMedicDto>(nonMedic));
       }
 
+      [Authorize(Roles = nameof(UserRoleType.NonMedic))]
+      [HttpGet("{id:guid}/medics/calendar-events/{startDate:datetime}/{endDate:datetime}")]
+      public async Task<ActionResult<Response<IEnumerable<CalendarEventDto>>>> GetMedicsCalendarEventsAsync(Guid id, DateTime startDate, DateTime endDate)
+      {
+         var calendarEvents = await _calendarEventService.GetByHospitalMedicsAsync(id, startDate, endDate);
+
+         return Ok(calendarEvents.Select(o => _mapper.Map<CalendarEventDto>(o)));
+      }
+
       [Authorize(Roles = nameof(UserRoleType.Admin) + "," + nameof(UserRoleType.Manager))]
       [HttpGet("{id:guid}/plan-subscriptions")]
       public async Task<ActionResult<PaginatedResponse<PlanSubscriptionDto>>> GetPlanSubscriptionsAsync(Guid id, int page = 1, int pageSize = 30)
@@ -256,6 +316,14 @@ namespace HealthGyro.Controllers
          var labTests = await _labService.GetLabTestsByHospitalAsync(id, page, pageSize, query);
 
          return Paginated<LabTest, LabTestDto>(labTests);
+      }
+
+      [HttpGet("{id:guid}/services")]
+      public async Task<ActionResult<Response<IEnumerable<ServiceCategoryDto>>>> GetServicesAsync(Guid id)
+      {
+         var hospital = await _hospitalService.GetByIdAsync(id, true);
+
+         return Ok(hospital.Services.Select(o => _mapper.Map<ServiceCategoryDto>(o)));
       }
 
       [Authorize(Roles = nameof(UserRoleType.Manager))]

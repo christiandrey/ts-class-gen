@@ -129,3 +129,9 @@ export type GeneratedSlice = {
 	name: string;
 	data: string;
 };
+
+export type GeneratedSelector = {
+	name: string;
+	data: string;
+	entitiesImports: Array<string>;
+};

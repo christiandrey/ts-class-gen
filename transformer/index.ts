@@ -3,6 +3,7 @@ import {transformToApiAsync} from './api';
 import {transformToEntitiesAsync} from './entities';
 import {transformToNormalizationSchemasAsync} from './schemas/normalization';
 import {transformToOptionsAsync} from './options';
+import {transformToSelectorsAsync} from './selectors';
 import {transformToSlicesAsync} from './slices';
 import {transformToThunksAsync} from './thunks/index';
 import {transformToTypingsAsync} from './enums';
@@ -25,6 +26,7 @@ async function runAsync() {
 	});
 	const thunks = thunkCollections.flatMap((o) => o.thunks);
 	const slices = await transformToSlicesAsync(thunks, normalizationSchemas);
+	const selectors = await transformToSelectorsAsync(normalizationSchemas);
 
 	await transformToTypingsAsync(enums);
 
@@ -37,6 +39,7 @@ async function runAsync() {
 		Endpoints: api.flatMap((o) => o.actions).length,
 		Thunks: thunks.length,
 		Slices: slices.length,
+		Selectors: selectors.length,
 	});
 }
 

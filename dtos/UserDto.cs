@@ -23,6 +23,7 @@ namespace HealthGyro.Models.Dtos
       public string PhoneNumber { get; set; }
       public bool IsActive { get; set; }
       public bool EmailConfirmed { get; set; }
+      public bool AccountSetup { get; set; }
       public List<string> RoleNames { get; set; }
    }
 }

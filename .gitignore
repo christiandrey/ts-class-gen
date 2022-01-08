@@ -6,13 +6,14 @@ node_modules
 # builds
 build
 dist
-adapters/**/*.*
-api/**/*.*
-entities/**/*.*
-schemas/**/*.*
-slices/**/*.*
-thunks/**/*.*
-typings/**/*.*
+# adapters/**/*.*
+# api/**/*.*
+# entities/**/*.*
+# schemas/**/*.*
+# selectors/**/*.*
+# slices/**/*.*
+# thunks/**/*.*
+# typings/**/*.*
 .rpt2_cache
 
 # misc

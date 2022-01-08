@@ -17,13 +17,16 @@ namespace HealthGyro.Controllers
    [Route("v{version:apiVersion}/calendar-events")]
    public class CalendarEventController : BaseController
    {
+      private readonly IAppointmentService _appointmentService;
       private readonly ICalendarEventService _calendarEventService;
       private readonly IMapper _mapper;
 
       public CalendarEventController(
+         IAppointmentService appointmentService,
          ICalendarEventService calendarEventService,
          IMapper mapper) : base(mapper)
       {
+         _appointmentService = appointmentService;
          _calendarEventService = calendarEventService;
          _mapper = mapper;
       }
@@ -44,6 +47,14 @@ namespace HealthGyro.Controllers
          var calendarEvent = await _calendarEventService.GetByIdAsync(id, true);
 
          return Ok(_mapper.Map<CalendarEventDto>(calendarEvent));
+      }
+
+      [HttpGet("{id:guid}/appointment")]
+      public async Task<ActionResult<Response<AppointmentDto>>> GetAppointmentAsync(Guid id)
+      {
+         var appointment = await _appointmentService.GetByCalendarEventAsync(id, true);
+
+         return Ok(_mapper.Map<AppointmentDto>(appointment));
       }
 
       [HttpPatch("{id:guid}")]

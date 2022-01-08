@@ -99,8 +99,12 @@ function generateActionContent(action: ControllerAction): string {
 		)
 		.join(', ')})`;
 
-	const configParams = params.filter((o) => !o.isFromRoute && (o.isFromQuery || o.isPrimitive));
-	const dataParam = params.find((o) => !o.isFromQuery && !o.isFromRoute);
+	const configParams = params.filter(
+		(o) => !o.isFromRoute && (o.isFromQuery || (o.isPrimitive && !o.isArray)),
+	);
+	const dataParam = params.find(
+		(o) => (!o.isPrimitive || (o.isPrimitive && o.isArray)) && !o.isFromQuery && !o.isFromRoute,
+	);
 
 	const fnDataChunk = ['get', 'delete'].includes(httpMethod)
 		? ''

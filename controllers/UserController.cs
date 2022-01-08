@@ -11,6 +11,7 @@ using HealthGyro.Models.Entities;
 using HealthGyro.Models.Enums;
 using HealthGyro.Models.Utilities.Response;
 using HealthGyro.Services.Entities.Interfaces;
+using HealthGyro.Services.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -24,12 +25,14 @@ namespace HealthGyro.Controllers
    public class UserController : BaseController
    {
       private readonly ICalendarEventService _calendarEventService;
+      private readonly JwtService _jwtService;
       private readonly IUserService _userService;
       private readonly IMapper _mapper;
 
-      public UserController(IUserService userService, ICalendarEventService calendarEventService, IMapper mapper) : base(mapper)
+      public UserController(IUserService userService, JwtService jwtService, ICalendarEventService calendarEventService, IMapper mapper) : base(mapper)
       {
          _calendarEventService = calendarEventService;
+         _jwtService = jwtService;
          _userService = userService;
          _mapper = mapper;
       }
@@ -162,6 +165,20 @@ namespace HealthGyro.Controllers
          var user = await _userService.UpdateUserAsync(GetUserId(), _mapper.Map<User>(dto));
 
          return Ok(_mapper.Map<UserDto>(user));
+      }
+
+      [HttpPut("profile/password")]
+      public async Task<ActionResult<Response<AuthResponseDto>>> UpdateUserPasswordAsync(string password)
+      {
+         var userId = GetUserId();
+
+         var user = await _userService.ResetPasswordAsync(userId, password);
+
+         var tokenData = await _jwtService.GenerateToken(user);
+
+         var responseData = new AuthResponseDto(tokenData, user);
+
+         return Ok(responseData);
       }
 
       [Authorize(Roles = nameof(UserRoleType.Admin))]
