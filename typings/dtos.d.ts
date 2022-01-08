@@ -330,6 +330,12 @@ export type ServiceCategoryCreationOptions = {
     name: string;
 }
 
+export type UserCreationOptions = {
+    lastName: string;
+    firstName: string;
+    email: string;
+}
+
 export type UserSetupOptions = {
     password: string;
 }

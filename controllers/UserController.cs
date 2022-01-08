@@ -45,6 +45,32 @@ namespace HealthGyro.Controllers
          return Paginated<User, UserLiteDto>(users);
       }
 
+      [HttpPost("admin"), Authorize(Roles = nameof(UserRoleType.Admin))]
+      public async Task<ActionResult<Response<UserLiteDto>>> CreateAdminUserAsync(UserCreationOptionsDto dto)
+      {
+         var temporaryLoginCode = Guid.NewGuid().ToString("N");
+
+         var user = await _userService.CreateAdminUserAsync(new User
+         {
+            FirstName = dto.FirstName,
+            LastName = dto.LastName,
+            Email = dto.Email,
+            UserName = dto.Email,
+            TemporaryLoginCode = temporaryLoginCode,
+         }, temporaryLoginCode);
+
+         return Ok(_mapper.Map<UserLiteDto>(user));
+      }
+
+
+      [HttpGet("admin"), Authorize(Roles = nameof(UserRoleType.Admin))]
+      public async Task<ActionResult<Response<IEnumerable<UserLiteDto>>>> GetAdminUsersAsync()
+      {
+         var users = await _userService.GetAdminUsers();
+
+         return Ok(users.Select(_mapper.Map<UserLiteDto>));
+      }
+
       [HttpGet("export"), Authorize(Roles = nameof(UserRoleType.Admin))]
       public async Task<FileContentResult> ExportAsync(int page = 1, int pageSize = 30, string query = null)
       {

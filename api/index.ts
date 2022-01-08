@@ -119,6 +119,7 @@ const health = () => {
     return {
         checkHealth: () => instance.get<ApiResponse>(build(path)),
         checkDatabaseHealth: () => instance.get<ApiResponse>(build(path, 'database')),
+        checkMailProviderHealth: () => instance.get<ApiResponse>(build(path, 'emails')),
     }
 }
 
@@ -352,6 +353,8 @@ const users = () => {
 
     return {
         readUsers: (query?: string, page = 1, pageSize = 30) => instance.get<PaginatedApiResponse<UserLite>>(build(path), {params:{query, page, pageSize}}),
+        createAdminUser: (dto: UserCreationOptions) => instance.post<ApiResponse<UserLite>>(build(path, 'admin'), dto),
+        readAdminUsers: () => instance.get<ApiResponse<Array<UserLite>>>(build(path, 'admin')),
         export: (page = 1, pageSize = 30, query?: string) => instance.get<ApiResponse>(build(path, 'export'), {params:{page, pageSize, query}}),
         exportAll: () => instance.get<ApiResponse>(build(path, 'export', 'all')),
         readUserProfileById: (userId: string) => instance.get<ApiResponse<User>>(build(path, userId)),

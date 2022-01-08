@@ -1,5 +1,6 @@
 import {UserEntities, userSchema} from '../../../schemas/normalization/user';
 import {PaginatedQueryParams} from '../../../typings';
+import {UserCreationOptions} from '../../../typings/dtos';
 import {createTypedAsyncThunk, safeNormalize} from '../../../utils/redux';
 
 import {UpdatedUser} from '../../../entities/updated-user';
@@ -16,6 +17,26 @@ export const fetchUsers = createTypedAsyncThunk(
         const responseData = response.data.data.map((o) => new UserLite(o));
         const normalized = safeNormalize<User, UserEntities, Array<string>>(responseData, [userSchema]);
         return {...normalized, meta};
+    },
+);
+
+export const createAdminUser = createTypedAsyncThunk(
+    'users/createAdminUser',
+    async (dto: UserCreationOptions) => {
+        const response = await api.users().createAdminUser(dto);
+        const responseData = new UserLite(response.data.data);
+        const normalized = safeNormalize<User, UserEntities, string>(responseData, userSchema);
+        return normalized;
+    },
+);
+
+export const fetchAdminUsers = createTypedAsyncThunk(
+    'users/fetchAdminUsers',
+    async () => {
+        const response = await api.users().readAdminUsers();
+        const responseData = response.data.data.map((o) => new UserLite(o));
+        const normalized = safeNormalize<User, UserEntities, Array<string>>(responseData, [userSchema]);
+        return normalized;
     },
 );
 
