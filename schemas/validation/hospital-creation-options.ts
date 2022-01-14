@@ -1,5 +1,5 @@
 import {getRequiredValidationMessage} from './utils';
-import {object, string} from 'yup';
+import {array, object, string} from 'yup';
 
 const hospitalCreationOptions = object({
     name: string().required(getRequiredValidationMessage),
@@ -7,7 +7,7 @@ const hospitalCreationOptions = object({
     stateId: string().required(getRequiredValidationMessage),
     countryId: string().required(getRequiredValidationMessage),
     managerId: string().required(getRequiredValidationMessage),
-    servicesIds: string().min(1).required(getRequiredValidationMessage),
+    servicesIds: array().min(1).required(getRequiredValidationMessage),
 });
 
 export default hospitalCreationOptions;

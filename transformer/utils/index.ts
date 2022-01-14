@@ -237,16 +237,16 @@ export function getPropertyAttributeYupFn({name, parameters}: PropertyAttribute)
 }
 
 export function getPropertyTypeYupFn({type, isEnum, isPrimitive, isArray}: ClassProperty) {
+	if (isArray) {
+		return `array()`;
+	}
+
 	if (isEnum) {
 		return `string()`;
 	}
 
 	if (isPrimitive) {
 		return `${type}()`;
-	}
-
-	if (isArray) {
-		return `array()`;
 	}
 
 	return `object()`;

@@ -11,5 +11,7 @@ namespace HealthGyro.Models.Dtos
       public int NonMedics { get; set; }
       public int ExtraMedics { get; set; }
       public int ExtraNonMedics { get; set; }
+      public int UsedMedics { get; set; }
+      public int UsedNonMedics { get; set; }
    }
 }

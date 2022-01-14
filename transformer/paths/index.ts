@@ -8,6 +8,7 @@ export const paths = {
 	ADAPTERS_FOLDER: join(ROOT, 'adapters'),
 	API_FOLDER: join(ROOT, 'api'),
 	CONTROLLERS_FOLDER: join(ROOT, 'controllers'),
+	DOCS_FOLDER: join(ROOT, 'docs'),
 	DTOS_FOLDER: join(ROOT, 'dtos'),
 	ENUMS_FOLDER: join(ROOT, 'enums'),
 	ENTITIES_FOLDER: join(ROOT, 'entities'),

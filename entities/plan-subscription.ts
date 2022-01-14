@@ -8,6 +8,8 @@ export class PlanSubscription extends BaseEntity {
     nonMedics: number;
     extraMedics: number;
     extraNonMedics: number;
+    usedMedics: number;
+    usedNonMedics: number;
 
     constructor(dto: PlanSubscription) {
         super(dto);
@@ -19,5 +21,7 @@ export class PlanSubscription extends BaseEntity {
         this.nonMedics = dto.nonMedics;
         this.extraMedics = dto.extraMedics;
         this.extraNonMedics = dto.extraNonMedics;
+        this.usedMedics = dto.usedMedics;
+        this.usedNonMedics = dto.usedNonMedics;
     }
 }

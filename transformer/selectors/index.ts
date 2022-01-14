@@ -34,7 +34,7 @@ function generateSelector(normalizationSchema: GeneratedNormalizationSchema): Ge
 	leaveEmitterScope(typescriptEmitter, ');');
 
 	return {
-		name,
+		name: `${camelName}RelationsSelector`,
 		data: typescriptEmitter.output,
 		entitiesImports: combinedEntities,
 	};

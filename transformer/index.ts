@@ -1,5 +1,6 @@
 import {transformToAdaptersAsync} from './adapters';
 import {transformToApiAsync} from './api';
+import {transformToDocsAsync} from './docs';
 import {transformToEntitiesAsync} from './entities';
 import {transformToNormalizationSchemasAsync} from './schemas/normalization';
 import {transformToOptionsAsync} from './options';
@@ -29,6 +30,15 @@ async function runAsync() {
 	const selectors = await transformToSelectorsAsync(normalizationSchemas);
 
 	await transformToTypingsAsync(enums);
+	await transformToDocsAsync(
+		entities,
+		enums,
+		options,
+		normalizationSchemas,
+		validationSchemas,
+		thunks,
+		selectors,
+	);
 
 	console.table({
 		Entities: entities.length,
