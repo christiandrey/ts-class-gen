@@ -16,8 +16,12 @@ namespace HealthGyro.Models.Dtos
       public Guid StateId { get; set; }
       [Required]
       public Guid CountryId { get; set; }
+      [Required, DataType(DataType.EmailAddress)]
+      public string ManagerEmail { get; set; }
       [Required]
-      public Guid ManagerId { get; set; }
+      public string ManagerFirstName { get; set; }
+      [Required]
+      public string ManagerLastName { get; set; }
       [Required, MinLength(1)]
       public List<Guid> ServicesIds { get; set; }
    }

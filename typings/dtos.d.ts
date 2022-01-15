@@ -143,7 +143,9 @@ export type HospitalCreationOptions = {
     addressLine2: string;
     stateId: string;
     countryId: string;
-    managerId: string;
+    managerEmail: string;
+    managerFirstName: string;
+    managerLastName: string;
     servicesIds: Array<string>;
 }
 
