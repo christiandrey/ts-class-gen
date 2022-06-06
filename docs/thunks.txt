@@ -81,6 +81,8 @@ createLabTestForEncounter
 fetchLabTestsByHospital
 fetchLabTestsForCurrentPatient
 fetchLabTestsForPatient
+fetchCountriesLocation
+fetchStatesLocationByCountry
 fetchLog
 fetchLogById
 deleteByLog

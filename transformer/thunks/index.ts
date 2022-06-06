@@ -38,6 +38,8 @@ const ENTITY_THUNK_GENERATOR_GROUP_MAP: Record<string, string> = {
 	LabScan: 'Lab',
 	LabTest: 'Lab',
 	LabTestResult: 'Lab',
+	Country: 'Location',
+	State: 'Location',
 };
 const PAGINATED_QUERY_PARAMS = ['page', 'pageSize', 'query'];
 
@@ -324,8 +326,13 @@ export async function transformToThunksAsync(config: {
 	await removeDirAsync(dir);
 	await createDirAsync(dir);
 
+	// const thunkControllers = controllers.filter(({name}) =>
+	// 	normalizationSchemas.some((o) => o.name.includes(name)),
+	// );
 	const thunkControllers = controllers.filter(({name}) =>
-		normalizationSchemas.some((o) => o.name.includes(name)),
+		normalizationSchemas.some(
+			(o) => o.name === name || ENTITY_THUNK_GENERATOR_GROUP_MAP[o.name] === name,
+		),
 	);
 	const thunkGeneratorGroups = getThunkGeneratorGroups(thunkControllers);
 	const thunkCollections = thunkGeneratorGroups.map(getThunkCollectionMapper(config));

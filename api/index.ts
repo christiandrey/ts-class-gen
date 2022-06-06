@@ -180,6 +180,15 @@ const labs = () => {
     }
 }
 
+const locations = () => {
+    const path = 'locations';
+
+    return {
+        readCountries: () => instance.get<ApiResponse<Array<Country>>>(build(path, 'countries')),
+        readStatesByCountry: (id: string) => instance.get<ApiResponse<Array<State>>>(build(path, 'countries', id, 'states')),
+    }
+}
+
 const logs = () => {
     const path = 'logs';
 
@@ -405,6 +414,7 @@ export const api = {
     hospitals,
     invoices,
     labs,
+    locations,
     logs,
     managers,
     medics,

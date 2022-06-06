@@ -18,6 +18,7 @@ export * from './invoice-item';
 export * from './lab';
 export * from './lab-scan';
 export * from './lab-test';
+export * from './location';
 export * from './log';
 export * from './manager';
 export * from './medic';
