@@ -1,4 +1,4 @@
-import {createManager, fetchCurrentManager, updateCurrentManager} from '../thunks';
+import {createManager, fetchCurrentManager, fetchManagerByHospital, updateCurrentManager} from '../thunks';
 import {createSlice, isAnyOf} from '@reduxjs/toolkit';
 
 import managersAdapter from '../adapters/manager';
@@ -8,7 +8,7 @@ export const managersSlice = createSlice({
     initialState: managersAdapter.getInitialState(),
     reducers: {},
     extraReducers: (builder) => {
-        builder.addMatcher(isAnyOf(createManager.fulfilled, fetchCurrentManager.fulfilled, updateCurrentManager.fulfilled), (state, action) => {
+        builder.addMatcher(isAnyOf(createManager.fulfilled, fetchCurrentManager.fulfilled, fetchManagerByHospital.fulfilled, updateCurrentManager.fulfilled), (state, action) => {
             managersAdapter.upsertMany(state, action.payload.entities.managers);
         });
     },

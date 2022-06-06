@@ -267,7 +267,7 @@ namespace HealthGyro.Controllers
 
          if (planSubscription == null)
          {
-            return NotFound(ResponseMessages.PlanSubscriptionNotExist);
+            return NoContent();
          }
 
          return Ok(_mapper.Map<PlanSubscriptionDto>(planSubscription));
@@ -324,6 +324,14 @@ namespace HealthGyro.Controllers
          var hospital = await _hospitalService.GetByIdAsync(id, true);
 
          return Ok(hospital.Services.Select(o => _mapper.Map<ServiceCategoryDto>(o)));
+      }
+
+      [HttpGet("{id:guid}/manager")]
+      public async Task<ActionResult<Response<ManagerDto>>> GetManagerAsync(Guid id)
+      {
+         var manager = await _managerService.GetByHospitalIdAsync(id);
+
+         return Ok(_mapper.Map<ManagerDto>(manager));
       }
 
       [Authorize(Roles = nameof(UserRoleType.Manager))]

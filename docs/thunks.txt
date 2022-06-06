@@ -87,6 +87,7 @@ fetchLog
 fetchLogById
 deleteByLog
 deleteLog
+fetchManagerByHospital
 createManager
 fetchCurrentManager
 updateCurrentManager

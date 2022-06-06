@@ -5,6 +5,16 @@ import {createTypedAsyncThunk, safeNormalize} from '../../../utils/redux';
 import {Manager} from '../../../entities/manager';
 import {api} from '../../../api';
 
+export const fetchManagerByHospital = createTypedAsyncThunk(
+    'managers/fetchManagerByHospital',
+    async (id: string) => {
+        const response = await api.hospitals().readManager(id);
+        const responseData = new Manager(response.data.data);
+        const normalized = safeNormalize<Manager, ManagerEntities, string>(responseData, managerSchema);
+        return normalized;
+    },
+);
+
 export const createManager = createTypedAsyncThunk(
     'managers/createManager',
     async (options: ManagerCreationOptions) => {

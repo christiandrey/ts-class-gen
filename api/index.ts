@@ -150,6 +150,7 @@ const hospitals = () => {
         readBillingItems: (id: string, query?: string, page = 1, pageSize = 30) => instance.get<PaginatedApiResponse<BillingItem>>(build(path, id, 'billing-items'), {params:{query, page, pageSize}}),
         readLabTests: (id: string, query?: string, page = 1, pageSize = 30) => instance.get<PaginatedApiResponse<LabTest>>(build(path, id, 'lab', 'tests'), {params:{query, page, pageSize}}),
         readServices: (id: string) => instance.get<ApiResponse<Array<ServiceCategory>>>(build(path, id, 'services')),
+        readManager: (id: string) => instance.get<ApiResponse<Manager>>(build(path, id, 'manager')),
         createBillingItem: (id: string, options: BillingItemCreationOptions) => instance.post<ApiResponse<BillingItem>>(build(path, id, 'billing-items'), options),
         readActivityLogs: (id: string, query?: string, page = 1, pageSize = 30) => instance.get<PaginatedApiResponse<ActivityLog>>(build(path, id, 'activity'), {params:{query, page, pageSize}}),
         readInvoices: (id: string, query?: string, page = 1, pageSize = 30) => instance.get<PaginatedApiResponse<InvoiceLite>>(build(path, id, 'invoices'), {params:{query, page, pageSize}}),
