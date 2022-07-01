@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using AutoMapper;
-using HealthGyro.Common.Constants;
-using HealthGyro.Common.Models;
-using HealthGyro.Models.Utilities.Response;
+using Caretaker.Common.Constants;
+using Caretaker.Common.Models;
+using Caretaker.Models.Utilities.Response;
 using Microsoft.AspNetCore.Mvc;
 
-namespace HealthGyro.Controllers
+namespace Caretaker.Controllers
 {
    public class BaseController : ControllerBase
    {

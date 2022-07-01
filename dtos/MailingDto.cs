@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
-namespace HealthGyro.Models.Dtos
+namespace Caretaker.Models.Dtos
 {
    public class MailingDto
    {

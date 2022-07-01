@@ -1,10 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Caretaker.Common.Attributes;
 
-namespace HealthGyro.Models.Dtos
+namespace Caretaker.Models.Dtos
 {
    public class AuthenticateDto
    {
-      [Required, DataType(DataType.EmailAddress)]
+      [Required]
+      [PhoneNumberOrEmailAddress]
       public string Username { get; set; }
       [Required]
       public string Password { get; set; }

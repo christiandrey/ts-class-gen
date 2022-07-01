@@ -1,8 +1,8 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using HealthGyro.Models.Entities;
+using Caretaker.Models.Entities;
 
-namespace HealthGyro.Models.Dtos
+namespace Caretaker.Models.Dtos
 {
    public class RoleDto
    {
@@ -15,20 +15,10 @@ namespace HealthGyro.Models.Dtos
       {
          Id = role.Id;
          Name = role.Name;
+         AccessSupport = role.AccessSupport;
          AccessAdmin = role.AccessAdmin;
-         AccessMedicAppointments = role.AccessMedicAppointments;
-         AccessFullPatientRecords = role.AccessFullPatientRecords;
-         AccessHospitalAdmissions = role.AccessHospitalAdmissions;
-         AccessHospitalFinances = role.AccessHospitalFinances;
-         AccessPatientMedications = role.AccessPatientMedications;
-         AccessPatientPaymentRecords = role.AccessPatientPaymentRecords;
-         AccessSummarizedPatientRecords = role.AccessSummarizedPatientRecords;
-         AnswerMedicalEnquiries = role.AnswerMedicalEnquiries;
-         AnswerNonMedicalEnquiries = role.AnswerNonMedicalEnquiries;
-         CreateRole = role.CreateRole;
          CreateUser = role.CreateUser;
-         ManageHospitalPrices = role.AccessAdmin;
-         UploadLabTestResults = role.UploadLabTestResults;
+         CreateRole = role.CreateRole;
       }
 
       public Guid Id { get; set; }
@@ -36,30 +26,10 @@ namespace HealthGyro.Models.Dtos
       [Required]
       public bool AccessAdmin { get; set; }
       [Required]
-      public bool AccessMedicAppointments { get; set; }
-      [Required]
-      public bool AccessFullPatientRecords { get; set; }
-      [Required]
-      public bool AccessHospitalAdmissions { get; set; }
-      [Required]
-      public bool AccessHospitalFinances { get; set; }
-      [Required]
-      public bool AccessPatientMedications { get; set; }
-      [Required]
-      public bool AccessPatientPaymentRecords { get; set; }
-      [Required]
-      public bool AccessSummarizedPatientRecords { get; set; }
-      [Required]
-      public bool AnswerMedicalEnquiries { get; set; }
-      [Required]
-      public bool AnswerNonMedicalEnquiries { get; set; }
-      [Required]
-      public bool CreateRole { get; set; }
+      public bool AccessSupport { get; set; }
       [Required]
       public bool CreateUser { get; set; }
       [Required]
-      public bool ManageHospitalPrices { get; set; }
-      [Required]
-      public bool UploadLabTestResults { get; set; }
+      public bool CreateRole { get; set; }
    }
 }

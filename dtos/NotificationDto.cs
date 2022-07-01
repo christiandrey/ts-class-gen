@@ -1,7 +1,7 @@
 using System;
-using HealthGyro.Models.Enums;
+using Caretaker.Models.Enums;
 
-namespace HealthGyro.Models.Dtos
+namespace Caretaker.Models.Dtos
 {
    public class NotificationDto
    {
@@ -9,6 +9,7 @@ namespace HealthGyro.Models.Dtos
       public DateTime CreatedAt { get; set; }
       public string Title { get; set; }
       public string Body { get; set; }
+      public string ExtraData { get; set; }
       public NotificationType Type { get; set; }
       public Guid? DataId { get; set; }
       public Guid? DataParentId { get; set; }

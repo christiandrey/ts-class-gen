@@ -1,10 +1,11 @@
 using System;
 
-namespace HealthGyro.Models.Dtos
+namespace Caretaker.Models.Dtos
 {
    public class ServiceCategoryDto
    {
       public Guid Id { get; set; }
       public string Name { get; set; }
+      public bool IsPaymentOnly { get; set; }
    }
 }

@@ -1,81 +1,103 @@
+﻿using System;
 using System.Net.Mime;
 using System.Threading.Tasks;
 using AutoMapper;
-using HealthGyro.Models.Dtos;
-using HealthGyro.Models.Enums;
-using HealthGyro.Models.Utilities.Response;
-using HealthGyro.Services.Entities.Interfaces;
+using Caretaker.Models.Dtos;
+using Caretaker.Models.Enums;
+using Caretaker.Models.Utilities.Response;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Caretaker.Services.Statistics;
 
-namespace HealthGyro.Controllers
+namespace Caretaker.Controllers
 {
-   [Authorize(Roles = nameof(UserRoleType.Manager))]
+   [Authorize(Roles = nameof(UserRoleType.Admin))]
    [ApiController]
    [ApiVersion("1")]
    [Produces(MediaTypeNames.Application.Json)]
-   [Route("v{version:apiVersion}/statistics")]
+   [Route("v{version:apiVersion}/stats")]
    public class StatisticsController : BaseController
    {
       private readonly IStatisticsService _statisticsService;
-      private readonly IMapper _mapper;
 
       public StatisticsController(
-         IStatisticsService statisticsService,
-         IMapper mapper) : base(mapper)
+          IMapper mapper,
+          IStatisticsService statisticsService) : base(mapper)
       {
          _statisticsService = statisticsService;
-         _mapper = mapper;
       }
 
-      [HttpGet("clinical-visits")]
-      public async Task<ActionResult<Response<HospitalClinicalVisitsStatsDto>>> GetHospitalClinicalVisitsStatsAsync([FromQuery] HospitalStatsOptionsDto options)
+
+      [HttpGet("units")]
+      public async Task<ActionResult<Response<StatDto>>> GetNumberOfUnitsStatsAsync(DateTime? startDate = null, DateTime? endDate = null)
       {
-         var userId = GetUserId();
+         var data = await _statisticsService.GetNumberOfUnitsStatsAsync(startDate, endDate);
 
-         var stats = await _statisticsService.GetHospitalClinicalVisitsStatsAsync(userId, options);
-
-         return Ok(stats);
+         return Ok(data);
       }
 
-      [HttpGet("patients")]
-      public async Task<ActionResult<Response<HospitalPatientsStatsDto>>> GetHospitalPatientsStatsAsync([FromQuery] HospitalStatsOptionsDto options)
+      [HttpGet("facility-managers")]
+      public async Task<ActionResult<Response<StatDto>>> GetNumberOfFacilityManagersStatsAsync(DateTime? startDate = null, DateTime? endDate = null)
       {
-         var userId = GetUserId();
+         var data = await _statisticsService.GetNumberOfFacilityManagersStatsAsync(startDate, endDate);
 
-         var stats = await _statisticsService.GetHospitalPatientsStatsAsync(userId, options);
-
-         return Ok(stats);
+         return Ok(data);
       }
 
-      [HttpGet("invoices")]
-      public async Task<ActionResult<Response<HospitalInvoiceStatsDto>>> GetHospitalInvoiceStatsAsync([FromQuery] HospitalStatsOptionsDto options)
+      [HttpGet("payments")]
+      public async Task<ActionResult<Response<StatDto>>> GetPaymentsProcessedStatsAsync(DateTime? startDate = null, DateTime? endDate = null)
       {
-         var userId = GetUserId();
+         var data = await _statisticsService.GetPaymentsProcessedStatsAsync(startDate, endDate);
 
-         var stats = await _statisticsService.GetHospitalInvoiceStatsAsync(userId, options);
-
-         return Ok(stats);
+         return Ok(data);
       }
 
-      [HttpGet("activity")]
-      public async Task<ActionResult<Response<HospitalPlottableStatsDto>>> GetHospitalActivityStatsAsync([FromQuery] HospitalStatsOptionsDto options)
+      [HttpGet("revenue")]
+      public async Task<ActionResult<Response<StatDto>>> GetRevenueStatsAsync(DateTime? startDate = null, DateTime? endDate = null)
       {
-         var userId = GetUserId();
+         var data = await _statisticsService.GetRevenueStatsAsync(startDate, endDate);
 
-         var stats = await _statisticsService.GetHospitalActivityStatsAsync(userId, options);
-
-         return Ok(stats);
+         return Ok(data);
       }
 
-      [HttpGet("transactions")]
-      public async Task<ActionResult<Response<HospitalPlottableStatsDto>>> GetHospitalTransactionsStatsAsync([FromQuery] HospitalStatsOptionsDto options)
+      [HttpGet("units/active")]
+      public async Task<ActionResult<Response<int>>> GetActiveUnitsCountAsync()
       {
-         var userId = GetUserId();
+         var count = await _statisticsService.GetActiveUnitsCountAsync();
 
-         var stats = await _statisticsService.GetHospitalTransactionsStatsAsync(userId, options);
+         return Ok(count);
+      }
 
-         return Ok(stats);
+      [HttpGet("facility-managers/active")]
+      public async Task<ActionResult<Response<int>>> GetActiveFacilityManagersCountAsync()
+      {
+         var count = await _statisticsService.GetActiveFacilityManagersCountAsync();
+
+         return Ok(count);
+      }
+
+      [HttpGet("revenue/total")]
+      public async Task<ActionResult<Response<decimal>>> GetTotalRevenueAsync()
+      {
+         var total = await _statisticsService.GetTotalRevenueAsync();
+
+         return Ok(total);
+      }
+
+      [HttpGet("units/total")]
+      public async Task<ActionResult<Response<int>>> GetTotalNumberOfUnitsAsync()
+      {
+         var count = await _statisticsService.GetTotalNumberOfUnitsAsync();
+
+         return Ok(count);
+      }
+
+      [HttpGet("payments/total")]
+      public async Task<ActionResult<Response<decimal>>> GetTotalPaymentsProcessedAsync()
+      {
+         var total = await _statisticsService.GetTotalPaymentsProcessedAsync();
+
+         return Ok(total);
       }
    }
 }

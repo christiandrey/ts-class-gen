@@ -1,6 +1,6 @@
 using System;
 
-namespace HealthGyro.Models.Dtos
+namespace Caretaker.Models.Dtos
 {
    public class CurrencyDto
    {

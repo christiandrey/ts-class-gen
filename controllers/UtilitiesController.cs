@@ -4,16 +4,19 @@ using System.Net.Mail;
 using System.Net.Mime;
 using System.Threading.Tasks;
 using AutoMapper;
-using HealthGyro.Models.Dtos;
-using HealthGyro.Models.Enums;
-using HealthGyro.Models.Utilities.Response;
-using HealthGyro.Services.EventEmitter;
-using HealthGyro.Services.MailProvider;
-using HealthGyro.Services.Template;
+using Caretaker.Models.Dtos;
+using Caretaker.Models.Enums;
+using Caretaker.Models.Utilities.Response;
+using Caretaker.Common.Extensions;
+using Caretaker.Services.EventEmitter;
+using Caretaker.Services.MailProvider;
+using Caretaker.Services.MessagingProvider;
+using Caretaker.Services.Template;
+using Caretaker.Services.Utilities.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace HealthGyro.Controllers
+namespace Caretaker.Controllers
 {
    [ApiController]
    [ApiVersion("1")]
@@ -22,16 +25,22 @@ namespace HealthGyro.Controllers
    public class UtilitiesController : BaseController
    {
       private readonly IEventEmitter _eventEmitter;
+      private readonly IDataMigrationService _dataMigrationService;
       private readonly ITemplateService _templateService;
       private readonly IMailProviderService _emailService;
+      private readonly IMessagingProviderService _messagingService;
 
       public UtilitiesController(
           IMapper mapper,
           IMailProviderService emailService,
+          IMessagingProviderService messagingService,
           ITemplateService templateService,
+          IDataMigrationService dataMigrationService,
           IEventEmitter eventEmitter) : base(mapper)
       {
          _emailService = emailService;
+         _dataMigrationService = dataMigrationService;
+         _messagingService = messagingService;
          _templateService = templateService;
          _eventEmitter = eventEmitter;
       }
@@ -62,11 +71,26 @@ namespace HealthGyro.Controllers
          return Ok();
       }
 
+      [HttpPost("message")]
+      [Authorize(Roles = nameof(UserRoleType.Admin))]
+      public async Task<ActionResult<Response>> SendMessageAsync(MessagingDto messagingDto)
+      {
+         var recipients = messagingDto.PhoneNumbers.Where(o => o.IsPhoneNumber());
+
+         if (!recipients.Any())
+         {
+            return BadRequest();
+         }
+
+         await _messagingService.SendAsync(recipients, messagingDto.Content);
+
+         return Ok();
+      }
+
       [Authorize(Roles = nameof(UserRoleType.Admin))]
       [HttpGet("mail-templates"), ResponseCache(Duration = 120)]
       public async Task<ActionResult<Response<MailTemplateDto[]>>> GetEmailTemplatesAsync()
       {
-
          var mailTemplateTasks = Enum.GetNames(typeof(EmailTemplateType))
              .Select(async x =>
              {

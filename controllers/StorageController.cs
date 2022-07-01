@@ -2,15 +2,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Mime;
 using System.Threading.Tasks;
-using HealthGyro.Common.Constants;
-using HealthGyro.Models.Dtos;
-using HealthGyro.Models.Utilities.Response;
-using HealthGyro.Services.Utilities.Interfaces;
+using Caretaker.Common.Constants;
+using Caretaker.Models.Dtos;
+using Caretaker.Models.Utilities.Response;
+using Caretaker.Services.Utilities.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace HealthGyro.Controllers
+namespace Caretaker.Controllers
 {
    [Authorize]
    [ApiController]

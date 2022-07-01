@@ -5,17 +5,17 @@ using System.Net.Mime;
 using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
-using HealthGyro.Common.Constants;
-using HealthGyro.Models.Dtos;
-using HealthGyro.Models.Entities;
-using HealthGyro.Models.Enums;
-using HealthGyro.Models.Utilities.Response;
-using HealthGyro.Services.Entities.Interfaces;
-using HealthGyro.Services.Utilities;
+using Caretaker.Common.Constants;
+using Caretaker.Models.Dtos;
+using Caretaker.Models.Entities;
+using Caretaker.Models.Enums;
+using Caretaker.Models.Utilities.Response;
+using Caretaker.Services.Entities.Interfaces;
+using Caretaker.Services.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace HealthGyro.Controllers
+namespace Caretaker.Controllers
 {
    [Authorize]
    [ApiController]
@@ -24,14 +24,12 @@ namespace HealthGyro.Controllers
    [Route("v{version:apiVersion}/users")]
    public class UserController : BaseController
    {
-      private readonly ICalendarEventService _calendarEventService;
       private readonly JwtService _jwtService;
       private readonly IUserService _userService;
       private readonly IMapper _mapper;
 
-      public UserController(IUserService userService, JwtService jwtService, ICalendarEventService calendarEventService, IMapper mapper) : base(mapper)
+      public UserController(IUserService userService, JwtService jwtService, IMapper mapper) : base(mapper)
       {
-         _calendarEventService = calendarEventService;
          _jwtService = jwtService;
          _userService = userService;
          _mapper = mapper;
@@ -45,34 +43,8 @@ namespace HealthGyro.Controllers
          return Paginated<User, UserLiteDto>(users);
       }
 
-      [HttpPost("admin"), Authorize(Roles = nameof(UserRoleType.Admin))]
-      public async Task<ActionResult<Response<UserLiteDto>>> CreateAdminUserAsync(UserCreationOptionsDto dto)
-      {
-         var temporaryLoginCode = Guid.NewGuid().ToString("N");
-
-         var user = await _userService.CreateAdminUserAsync(new User
-         {
-            FirstName = dto.FirstName,
-            LastName = dto.LastName,
-            Email = dto.Email,
-            UserName = dto.Email,
-            TemporaryLoginCode = temporaryLoginCode,
-         }, temporaryLoginCode);
-
-         return Ok(_mapper.Map<UserLiteDto>(user));
-      }
-
-
-      [HttpGet("admin"), Authorize(Roles = nameof(UserRoleType.Admin))]
-      public async Task<ActionResult<Response<IEnumerable<UserLiteDto>>>> GetAdminUsersAsync()
-      {
-         var users = await _userService.GetAdminUsers();
-
-         return Ok(users.Select(_mapper.Map<UserLiteDto>));
-      }
-
       [HttpGet("export"), Authorize(Roles = nameof(UserRoleType.Admin))]
-      public async Task<FileContentResult> ExportAsync(int page = 1, int pageSize = 30, string query = null)
+      public async Task<FileContentResult> ExportAsync(int page, int pageSize, string query = null)
       {
          var csv = await _userService.GetUsersCsvAsync(page, pageSize, query);
 
@@ -80,7 +52,7 @@ namespace HealthGyro.Controllers
       }
 
       [HttpGet("export/all"), Authorize(Roles = nameof(UserRoleType.Admin))]
-      public async Task<FileContentResult> ExportAllAsync()
+      public async Task<FileContentResult> ExportAsync()
       {
          var csv = await _userService.GetUsersCsvAsync();
 
@@ -88,7 +60,7 @@ namespace HealthGyro.Controllers
       }
 
       [HttpGet("{userId:guid}")]
-      public async Task<ActionResult<Response<UserDto>>> GetUserProfileByIdAsync(Guid userId)
+      public async Task<ActionResult<Response<UserDto>>> GetUserProfileAsync(Guid userId)
       {
          var user = await _userService.GetByIdAsync(userId);
 
@@ -100,9 +72,42 @@ namespace HealthGyro.Controllers
          return Ok(_mapper.Map<UserDto>(user));
       }
 
+      [HttpGet("{userId:guid}/accounts")]
+      public async Task<ActionResult<Response<UserAccountsDto>>> GetUserAccountsAsync(Guid userId)
+      {
+         var user = await _userService.GetByIdAsync(userId);
+
+         var userAccounts = new UserAccountsDto
+         {
+            Residents = user.Residents.Select(o => _mapper.Map<ResidentDto>(o)).ToList(),
+         };
+
+         if (user.FacilityManager != null)
+         {
+            userAccounts.FacilityManager = _mapper.Map<FacilityManagerDto>(user.FacilityManager);
+         }
+
+         if (user.Vendor != null)
+         {
+            userAccounts.Vendor = _mapper.Map<VendorDto>(user.Vendor);
+         }
+
+         if (user.Ghost != null)
+         {
+            userAccounts.Ghost = _mapper.Map<GhostDto>(user.Ghost);
+         }
+
+         if (user.Owner != null)
+         {
+            userAccounts.Owner = _mapper.Map<OwnerDto>(user.Owner);
+         }
+
+         return Ok(userAccounts);
+      }
+
       [Authorize(Roles = nameof(UserRoleType.Admin))]
       [HttpDelete("{userId:guid}")]
-      public async Task<ActionResult<Response>> DeleteUserAsync(Guid userId, DeleteMode mode = DeleteMode.Soft)
+      public async Task<ActionResult<Response>> DeleteUserAsync(Guid userId)
       {
          var user = await _userService.GetByIdAsync(userId);
 
@@ -111,7 +116,24 @@ namespace HealthGyro.Controllers
             return NotFound(ResponseMessages.UserNotExist);
          }
 
-         await _userService.DeleteUserAsync(userId, mode);
+         await _userService.DeleteUserAsync(userId);
+
+         return Ok();
+      }
+
+      [HttpDelete("")]
+      public async Task<ActionResult<Response>> DeleteCurrentUserAsync()
+      {
+         var userId = GetUserId();
+         
+         var user = await _userService.GetByIdAsync(userId);
+
+         if (user == null)
+         {
+            return NotFound(ResponseMessages.UserNotExist);
+         }
+
+         await _userService.DeleteUserAsync(userId);
 
          return Ok();
       }
@@ -132,9 +154,10 @@ namespace HealthGyro.Controllers
          return Ok();
       }
 
+
       [Authorize(Roles = nameof(UserRoleType.Admin))]
       [HttpPut("{userId:guid}/deactivate")]
-      public async Task<ActionResult<Response>> DectivateUserAsync(Guid userId)
+      public async Task<ActionResult<Response>> DeactivateUserAsync(Guid userId)
       {
          var user = await _userService.GetByIdAsync(userId);
 
@@ -148,49 +171,65 @@ namespace HealthGyro.Controllers
          return Ok();
       }
 
-      [HttpPut("setup/{password}")]
-      public async Task<ActionResult<Response<UserDto>>> SetupUserAsync(string password)
-      {
-         var userId = GetUserId();
-
-         var user = await _userService.SetupUserAsync(userId, password);
-
-         return Ok(_mapper.Map<UserDto>(user));
-      }
-
       [HttpGet("profile")]
-      public async Task<ActionResult<Response<UserDto>>> GetCurrentUserProfileAsync()
+      public async Task<ActionResult<Response<UserDto>>> GetUserProfileAsync()
       {
          var user = await _userService.GetByIdAsync(GetUserId());
 
          return Ok(_mapper.Map<UserDto>(user));
       }
 
-      [HttpGet("current/calendar-events/{startDate:datetime}/{endDate:datetime}")]
-      public async Task<ActionResult<Response<IEnumerable<CalendarEventDto>>>> GetCurrentUserCalendarEventsAsync(DateTime startDate, DateTime endDate)
-      {
-         var userId = GetUserId();
-
-         var calendarEvents = await _calendarEventService.GetByParticipantAsync(userId, startDate, endDate);
-
-         return Ok(calendarEvents.Select(o => _mapper.Map<CalendarEventDto>(o)));
-      }
-
-      [Authorize(Roles = nameof(UserRoleType.NonMedic))]
-      [HttpGet("{id:guid}/calendar-events/{startDate:datetime}/{endDate:datetime}")]
-      public async Task<ActionResult<Response<IEnumerable<CalendarEventDto>>>> GetCalendarEventsByUserAsync(Guid id, DateTime startDate, DateTime endDate)
-      {
-         var calendarEvents = await _calendarEventService.GetByParticipantAsync(id, startDate, endDate);
-
-         return Ok(calendarEvents.Select(o => _mapper.Map<CalendarEventDto>(o)));
-      }
-
       [HttpPatch("profile")]
       public async Task<ActionResult<Response<UserDto>>> UpdateUserProfileAsync(UpdatedUserDto dto)
       {
-         var user = await _userService.UpdateUserAsync(GetUserId(), _mapper.Map<User>(dto));
+         var userId = GetUserId();
+
+         var user = await _userService.UpdateUserAsync(userId, _mapper.Map<User>(dto));
 
          return Ok(_mapper.Map<UserDto>(user));
+      }
+
+      [HttpPatch("current/accounts/active")]
+      public async Task<ActionResult<Response<UserDto>>> UpdateUserActiveAccountAsync(UserCurrentAccountDto dto)
+      {
+         var userId = GetUserId();
+
+         var user = await _userService.UpdateCurrentAccountAsync(userId, dto.CurrentAccountId, dto.CurrentAccountType, false);
+
+         return Ok(_mapper.Map<UserDto>(user));
+      }
+
+      [HttpGet("current/accounts")]
+      public async Task<ActionResult<Response<UserAccountsDto>>> GetUserAccountsAsync()
+      {
+         var user = await _userService.GetByIdAsync(GetUserId());
+
+         var userAccounts = new UserAccountsDto
+         {
+            Residents = user.Residents.Select(o => _mapper.Map<ResidentDto>(o)).ToList(),
+         };
+
+         if (user.FacilityManager != null)
+         {
+            userAccounts.FacilityManager = _mapper.Map<FacilityManagerDto>(user.FacilityManager);
+         }
+
+         if (user.Vendor != null)
+         {
+            userAccounts.Vendor = _mapper.Map<VendorDto>(user.Vendor);
+         }
+
+         if (user.Ghost != null)
+         {
+            userAccounts.Ghost = _mapper.Map<GhostDto>(user.Ghost);
+         }
+
+         if (user.Owner != null)
+         {
+            userAccounts.Owner = _mapper.Map<OwnerDto>(user.Owner);
+         }
+
+         return Ok(userAccounts);
       }
 
       [HttpPut("profile/password")]

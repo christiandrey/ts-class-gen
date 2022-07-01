@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Caretaker.Common.Attributes;
 
-namespace HealthGyro.Models.Dtos
+namespace Caretaker.Models.Dtos
 {
    public class RegisterDto
    {
@@ -13,6 +14,9 @@ namespace HealthGyro.Models.Dtos
 
       [Required]
       public string LastName { get; set; }
+
+      [Required, PhoneNumber]
+      public string PhoneNumber { get; set; }
 
       [Required, DataType(DataType.Password)]
       public string Password { get; set; }

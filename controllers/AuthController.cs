@@ -1,20 +1,23 @@
-﻿using HealthGyro.Common.Constants;
-using HealthGyro.Models.Dtos;
-using HealthGyro.Models.Enums;
-using HealthGyro.Models.Utilities.Response;
-using HealthGyro.Services.Email;
-using HealthGyro.Services.Entities.Interfaces;
-using HealthGyro.Services.Utilities.Interfaces;
-using HealthGyro.Services.Utilities;
+﻿using Caretaker.Common.Constants;
+using Caretaker.Common.Exceptions;
+using Caretaker.Models.Dtos;
+using Caretaker.Models.Entities;
+using Caretaker.Models.Enums;
+using Caretaker.Models.Utilities.Response;
+using Caretaker.Services.Email;
+using Caretaker.Services.Entities.Interfaces;
+using Caretaker.Services.Utilities.Interfaces;
+using Caretaker.Services.Utilities;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq;
 using System.Threading.Tasks;
 using System;
 using System.Net.Mime;
+using Caretaker.Common.Extensions;
 using AutoMapper;
-using HealthGyro.Models.BackgroundDtos;
-using HealthGyro.Models.Entities;
+using Caretaker.Models.BackgroundDtos;
 
-namespace HealthGyro.Controllers
+namespace Caretaker.Controllers
 {
    [ApiController]
    [ApiVersion("1")]
@@ -23,7 +26,6 @@ namespace HealthGyro.Controllers
    public class AuthController : BaseController
    {
       private readonly IBackgroundService _backgroundService;
-      private readonly IGuestService _guestService;
       private readonly IUserService _userService;
       private readonly OtpService _otpService;
       private readonly JwtService _jwtService;
@@ -31,21 +33,67 @@ namespace HealthGyro.Controllers
 
       public AuthController(
          IBackgroundService backgroundService,
-         IGuestService guestService,
          IUserService userService,
          OtpService totpService,
          JwtService jwtService,
          IMapper mapper) : base(mapper)
       {
          _backgroundService = backgroundService;
-         _guestService = guestService;
          _userService = userService;
          _otpService = totpService;
          _jwtService = jwtService;
          _mapper = mapper;
       }
 
-      [HttpPost("token")]
+      [HttpPost("register")]
+      public async Task<ActionResult<Response<AuthResponseDto>>> CreateUserAsync(RegisterDto dto)
+      {
+         try
+         {
+            var existingUser = await _userService.GetByEmailAsync(dto.Email);
+
+            if (existingUser != null)
+            {
+               return BadRequest(nameof(dto.Email), ResponseMessages.UserAlreadyExists);
+            }
+
+            var userToCreate = new User
+            {
+               FirstName = dto.FirstName.Trim().ToTitleCase(),
+               LastName = dto.LastName.Trim().ToTitleCase(),
+               Name = $"{dto.FirstName.Trim()} {dto.LastName.Trim()}",
+               Email = dto.Email,
+               PhoneNumber = dto.PhoneNumber
+            };
+
+            var user = await _userService.CreateUserAsync(userToCreate, dto.Password);
+
+            var verifyEmailOtp = _otpService.GenerateHotp(user.Id, OtpType.VerifyEmail);
+
+            var userBackgroundDto = _mapper.Map<UserBackgroundDto>(user);
+
+            _backgroundService.Enqueue<IEmailService>(o => o.SendOnEmailVerificationRequestAsync(userBackgroundDto, verifyEmailOtp));
+
+            var tokenData = await _jwtService.GenerateToken(user);
+
+            var responseData = new AuthResponseDto(tokenData, user);
+
+            return Ok(responseData);
+         }
+         catch (IdentityException bug)
+         {
+            var message = bug.Errors.FirstOrDefault();
+
+            if (message.Contains("is already taken"))
+            {
+               return BadRequest(nameof(dto.Email), ResponseMessages.UserAlreadyExists);
+            }
+
+            return BadRequest(bug.Errors.FirstOrDefault());
+         }
+      }
+
+      [HttpPost("login")]
       public async Task<ActionResult<Response<AuthResponseDto>>> AuthenticateUserAsync(AuthenticateDto dto)
       {
          var user = await _userService.AuthenticateAsync(dto.Username, dto.Password);
@@ -55,26 +103,60 @@ namespace HealthGyro.Controllers
             return BadRequest(nameof(dto.Password), ResponseMessages.InvalidLoginDetails);
          }
 
-         Guest guest = null;
-
-         if (await _userService.IsInRoleAsync(user, UserRoleType.Guest))
-         {
-            guest = await _guestService.GetByUserIdAsync(user.Id);
-
-            if (guest.AccessExpiresAt.HasValue)
-            {
-               if (guest.AccessExpiresAt.Value < DateTime.Now)
-               {
-                  return BadRequest(nameof(dto.Username), ResponseMessages.GuestAccessExpired);
-               }
-            }
-         }
-
-         var tokenData = await _jwtService.GenerateToken(user, guest?.AccessExpiresAt);
+         var tokenData = await _jwtService.GenerateToken(user);
 
          var responseData = new AuthResponseDto(tokenData, user);
 
          return Ok(responseData);
+      }
+
+      [HttpPost("verifications/email")]
+      public async Task<ActionResult<Response>> VerifyEmailAsync(VerifyEmailDto dto)
+      {
+         var user = await _userService.GetByEmailAsync(dto.Email);
+
+         if (user == null)
+         {
+            return BadRequest(nameof(dto.Email), ResponseMessages.UserNotExist);
+         }
+
+         if (user.EmailConfirmed)
+         {
+            return Ok();
+         }
+
+         if (!_otpService.VerifyHotp(user.Id, OtpType.VerifyEmail, dto.Code))
+         {
+            return BadRequest(nameof(dto.Code), ResponseMessages.InvalidOrExpiredCode);
+         }
+
+         await _userService.VerifyEmailAsync(user.Id);
+
+         return Ok();
+      }
+
+      [HttpPost("verifications/email/resend")]
+      public async Task<ActionResult<Response>> ResendEmailAsync(string email)
+      {
+         var user = await _userService.GetByEmailAsync(email);
+
+         if (user == null)
+         {
+            return BadRequest(nameof(email), ResponseMessages.UserNotExist);
+         }
+
+         if (user.EmailConfirmed)
+         {
+            return Ok();
+         }
+
+         var verifyEmailOtp = _otpService.GenerateHotp(user.Id, OtpType.VerifyEmail);
+
+         var userBackgroundDto = _mapper.Map<UserBackgroundDto>(user);
+
+         _backgroundService.Enqueue<IEmailService>(o => o.SendOnEmailVerificationRequestAsync(userBackgroundDto, verifyEmailOtp));
+
+         return Ok();
       }
 
       [HttpPost("refresh")]
@@ -87,22 +169,7 @@ namespace HealthGyro.Controllers
             return BadRequest(nameof(refreshToken), ResponseMessages.InvalidRefreshToken);
          }
 
-         Guest guest = null;
-
-         if (await _userService.IsInRoleAsync(user, UserRoleType.Guest))
-         {
-            guest = await _guestService.GetByUserIdAsync(user.Id);
-
-            if (guest.AccessExpiresAt.HasValue)
-            {
-               if (guest.AccessExpiresAt.Value < DateTime.Now)
-               {
-                  return BadRequest(nameof(refreshToken), ResponseMessages.InvalidRefreshToken);
-               }
-            }
-         }
-
-         var tokenData = await _jwtService.GenerateToken(user, guest?.AccessExpiresAt);
+         var tokenData = await _jwtService.GenerateToken(user);
 
          var responseData = new AuthResponseDto(tokenData, user);
 
@@ -119,19 +186,6 @@ namespace HealthGyro.Controllers
          if (user == null)
          {
             return BadRequest(nameof(email), ResponseMessages.UserNotExist);
-         }
-
-         if (await _userService.IsInRoleAsync(user, UserRoleType.Guest))
-         {
-            var guest = await _guestService.GetByUserIdAsync(user.Id);
-
-            if (guest.AccessExpiresAt.HasValue)
-            {
-               if (guest.AccessExpiresAt.Value < DateTime.Now)
-               {
-                  return BadRequest(nameof(email), ResponseMessages.GuestAccessExpired);
-               }
-            }
          }
 
          var totp = _otpService.GenerateTotp(user.Id, OtpType.ResetPassword);

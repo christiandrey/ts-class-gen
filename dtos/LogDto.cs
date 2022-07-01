@@ -1,7 +1,7 @@
 using System;
-using HealthGyro.Models.Enums;
+using Caretaker.Models.Enums;
 
-namespace HealthGyro.Models.Dtos
+namespace Caretaker.Models.Dtos
 {
    public class LogLiteDto
    {

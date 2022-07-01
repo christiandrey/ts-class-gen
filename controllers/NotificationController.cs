@@ -1,14 +1,14 @@
 using System.Net.Mime;
 using System.Threading.Tasks;
 using AutoMapper;
-using HealthGyro.Models.Dtos;
-using HealthGyro.Models.Entities;
-using HealthGyro.Models.Utilities.Response;
-using HealthGyro.Services.Entities.Interfaces;
+using Caretaker.Models.Dtos;
+using Caretaker.Models.Entities;
+using Caretaker.Models.Utilities.Response;
+using Caretaker.Services.Entities.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace HealthGyro.Controllers
+namespace Caretaker.Controllers
 {
    [Authorize]
    [ApiController]

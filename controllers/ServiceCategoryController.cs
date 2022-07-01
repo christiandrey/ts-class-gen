@@ -4,15 +4,15 @@ using System.Linq;
 using System.Net.Mime;
 using System.Threading.Tasks;
 using AutoMapper;
-using HealthGyro.Models.Dtos;
-using HealthGyro.Models.Entities;
-using HealthGyro.Models.Enums;
-using HealthGyro.Models.Utilities.Response;
-using HealthGyro.Services.Entities.Interfaces;
+using Caretaker.Models.Dtos;
+using Caretaker.Models.Entities;
+using Caretaker.Models.Enums;
+using Caretaker.Models.Utilities.Response;
+using Caretaker.Services.Entities.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace HealthGyro.Controllers
+namespace Caretaker.Controllers
 {
    [Authorize]
    [ApiController]
@@ -38,7 +38,7 @@ namespace HealthGyro.Controllers
          return Ok(serviceCategories.Select(o => _mapper.Map<ServiceCategoryDto>(o)));
       }
 
-      [Authorize(Roles = nameof(UserRoleType.Manager))]
+      [Authorize(Roles = nameof(UserRoleType.Admin))]
       [HttpPost("")]
       public async Task<ActionResult<Response<ServiceCategoryDto>>> CreateAsync(ServiceCategoryCreationOptionsDto dto)
       {
@@ -47,7 +47,7 @@ namespace HealthGyro.Controllers
          return Ok(_mapper.Map<ServiceCategoryDto>(serviceCategory));
       }
 
-      [Authorize(Roles = nameof(UserRoleType.Manager))]
+      [Authorize(Roles = nameof(UserRoleType.Admin))]
       [HttpDelete("{id:guid}")]
       public async Task<ActionResult<Response>> DeleteAsync(Guid id)
       {

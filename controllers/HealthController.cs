@@ -1,12 +1,13 @@
 using System.Net.Mime;
 using System.Threading.Tasks;
-using HealthGyro.Models.Utilities.Response;
-using HealthGyro.Services.Entities.Interfaces;
-using HealthGyro.Services.MailProvider;
+using Caretaker.Models.Utilities.Response;
+using Caretaker.Services.Entities.Interfaces;
+using Caretaker.Services.MailProvider;
+using Caretaker.Services.MessagingProvider;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace HealthGyro.Controllers
+namespace Caretaker.Controllers
 {
    [ApiController]
    [ApiVersion("1")]
@@ -15,11 +16,13 @@ namespace HealthGyro.Controllers
    public class HealthController : BaseController
    {
       private readonly IHealthService _healthService;
+      private readonly IMessagingProviderService _messagingProviderService;
       private readonly IMailProviderService _mailProviderService;
 
-      public HealthController(IHealthService healthService, IMailProviderService mailProviderService)
+      public HealthController(IHealthService healthService, IMessagingProviderService messagingProviderService, IMailProviderService mailProviderService)
       {
          _healthService = healthService;
+         _messagingProviderService = messagingProviderService;
          _mailProviderService = mailProviderService;
       }
 
@@ -46,6 +49,19 @@ namespace HealthGyro.Controllers
       public async Task<ActionResult<Response>> CheckMailProviderHealthAsync()
       {
          var canConnect = await _mailProviderService.CanConnectAsync();
+
+         if (canConnect)
+         {
+            return Ok();
+         }
+
+         return StatusCode(StatusCodes.Status503ServiceUnavailable);
+      }
+
+      [HttpGet("messaging")]
+      public async Task<ActionResult<Response>> CheckMessagingProviderHealthAsync()
+      {
+         var canConnect = await _messagingProviderService.CanConnectAsync();
 
          if (canConnect)
          {
