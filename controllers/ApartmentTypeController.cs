@@ -11,6 +11,7 @@ using Caretaker.Models.Enums;
 using Caretaker.Models.Services.Management;
 using Caretaker.Models.Utilities.Response;
 using Caretaker.Services.Entities.Interfaces;
+using Caretaker.Services.Permissions.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -26,6 +27,8 @@ namespace Caretaker.Controllers
    {
       private readonly IApartmentTypeService _apartmentTypeService;
       private readonly ICurrencyService _currencyService;
+      private readonly IEstateService _estateService;
+      private readonly IPermissionsService _permissionsService;
       private readonly IRecurringPaymentService _recurringPaymentService;
       private readonly IResidentService _residentService;
       private readonly IMapper _mapper;
@@ -33,12 +36,16 @@ namespace Caretaker.Controllers
       public ApartmentTypeController(
          IApartmentTypeService apartmentTypeService,
          ICurrencyService currencyService,
+         IEstateService estateService,
+         IPermissionsService permissionsService,
          IRecurringPaymentService recurringPaymentService,
          IResidentService residentService,
          IMapper mapper) : base(mapper)
       {
          _apartmentTypeService = apartmentTypeService;
          _currencyService = currencyService;
+         _estateService = estateService;
+         _permissionsService = permissionsService;
          _recurringPaymentService = recurringPaymentService;
          _residentService = residentService;
          _mapper = mapper;
@@ -48,6 +55,11 @@ namespace Caretaker.Controllers
       public async Task<ActionResult<Response<ApartmentTypeDto>>> CreateAsync(ApartmentTypeCreationOptionsDto dto)
       {
          var userId = GetUserId();
+
+         if (dto.EstateId.HasValue)
+         {
+            await _permissionsService.AssertOrganizationScopeAsync(dto.EstateId.Value, userId, OrganizationScopes.ApartmentTypesManage);
+         }
 
          var apartmentType = await _apartmentTypeService.CreateAsync(_mapper.Map<ApartmentTypeCreationOptions>(dto), userId);
 
@@ -80,6 +92,10 @@ namespace Caretaker.Controllers
       [HttpPatch("{id:guid}")]
       public async Task<ActionResult<Response<ApartmentTypeDto>>> UpdateAsync(Guid id, ApartmentTypeUpdateOptionsDto dto)
       {
+         var userId = GetUserId();
+
+         await _permissionsService.AssertOrganizationApartmentTypeScopeAsync(id, userId, OrganizationScopes.ApartmentTypesManage);
+
          var apartmentType = await _apartmentTypeService.UpdateAsync(id, _mapper.Map<ApartmentTypeUpdateOptions>(dto));
 
          return Ok(_mapper.Map<ApartmentTypeDto>(apartmentType));
@@ -88,6 +104,10 @@ namespace Caretaker.Controllers
       [HttpPut("{id:guid}/services")]
       public async Task<ActionResult<Response<ApartmentTypeDto>>> UpdateServicesAsync(Guid id, List<Guid> servicesIds)
       {
+         var userId = GetUserId();
+
+         await _permissionsService.AssertOrganizationApartmentTypeScopeAsync(id, userId, OrganizationScopes.ApartmentTypesManage);
+
          var apartmentType = await _apartmentTypeService.UpdateServicesAsync(id, servicesIds);
 
          return Ok(_mapper.Map<ApartmentTypeDto>(apartmentType));
@@ -106,6 +126,8 @@ namespace Caretaker.Controllers
             return BadRequest();
          }
 
+         await _permissionsService.AssertOrganizationScopeAsync(apartmentType.EstateId.Value, userId, OrganizationScopes.ApartmentManage);
+
          var onboardedUsers = await _residentService.OnboardFromCsvAsync(apartmentType, resource, userId);
 
          return Ok(onboardedUsers.Select(o => _mapper.Map<OnboardedUserDto>(o)));
@@ -117,6 +139,8 @@ namespace Caretaker.Controllers
       {
          var userId = GetUserId();
 
+         await _permissionsService.AssertOrganizationApartmentTypeScopeAsync(id, userId, OrganizationScopes.ApartmentTypesManage);
+
          var apartmentType = await _apartmentTypeService.UpdateServiceChargeAsync(id, userId, _mapper.Map<ServiceChargeUpdateOptions>(dto));
 
          var currency = await _currencyService.GetByRegionCodeOrDefaultAsync();
@@ -126,6 +150,10 @@ namespace Caretaker.Controllers
          var localAmount = apartmentType.ServiceChargeAmount * baseToCurrencyExchangeRate;
 
          var estateId = apartmentType.EstateId;
+
+         var estate = apartmentType.Estate;
+
+         var defaultPaymentAccount = _estateService.GetPaymentAccountOrDefault(estate);
 
          var residents = await _residentService.GetAllByApartmentTypeAsync(apartmentType.Id);
 
@@ -160,6 +188,7 @@ namespace Caretaker.Controllers
                      RecipientId = userId,
                      EstateId = estateId,
                      Recurrence = apartmentType.ServiceChargeRecurrence,
+                     PaymentAccountId = defaultPaymentAccount.Id,
                   });
                }
                else
@@ -185,6 +214,10 @@ namespace Caretaker.Controllers
       [HttpDelete("{id:guid}")]
       public async Task<ActionResult<Response>> DeleteAsync(Guid id)
       {
+         var userId = GetUserId();
+
+         await _permissionsService.AssertOrganizationApartmentTypeScopeAsync(id, userId, OrganizationScopes.ApartmentTypesManage);
+
          await _apartmentTypeService.DeleteAsync(id);
 
          return Ok();

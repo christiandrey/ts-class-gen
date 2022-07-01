@@ -8,6 +8,7 @@ using Caretaker.Models.Entities;
 using Caretaker.Models.Enums;
 using Caretaker.Models.Utilities.Response;
 using Caretaker.Services.Entities.Interfaces;
+using Caretaker.Services.Permissions.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -23,17 +24,20 @@ namespace Caretaker.Controllers
       private readonly IPaymentRequestService _paymentRequestService;
       private readonly IRecurringPaymentService _recurringPaymentService;
       private readonly IPaymentService _paymentService;
+      private readonly IPermissionsService _permissionsService;
       private readonly IMapper _mapper;
 
       public PaymentRequestController(
          IPaymentRequestService paymentRequestService,
          IPaymentService paymentService,
+         IPermissionsService permissionsService,
          IRecurringPaymentService recurringPaymentService,
          IMapper mapper
       ) : base(mapper)
       {
          _paymentRequestService = paymentRequestService;
          _paymentService = paymentService;
+         _permissionsService = permissionsService;
          _recurringPaymentService = recurringPaymentService;
          _mapper = mapper;
       }
@@ -56,6 +60,8 @@ namespace Caretaker.Controllers
       {
          var userId = GetUserId();
 
+         await _permissionsService.AssertOrganizationPaymentRequestScopeAsync(id, userId, OrganizationScopes.PaymentRequestsManage);
+
          var paymentRequest = await _paymentRequestService.GetByIdAsync(id, true);
 
          await _paymentRequestService.UpdateStatusAsync(id, userId, PaymentRequestStatus.Approved);
@@ -69,6 +75,7 @@ namespace Caretaker.Controllers
                LocalAmount = paymentRequest.LocalAmount,
                ServiceCategoryId = paymentRequest.ServiceCategoryId,
                BeneficiaryId = paymentRequest.BeneficiaryId,
+               PaymentAccountId = paymentRequest.PaymentAccountId,
                Description = paymentRequest.Description,
                Notes = paymentRequest.Notes,
                Mode = paymentRequest.Mode,
@@ -90,6 +97,8 @@ namespace Caretaker.Controllers
       public async Task<ActionResult<Response<PaymentRequestDto>>> RejectPaymentRequestAsync(Guid id)
       {
          var userId = GetUserId();
+
+         await _permissionsService.AssertOrganizationPaymentRequestScopeAsync(id, userId, OrganizationScopes.PaymentRequestsManage);
 
          var paymentRequest = await _paymentRequestService.UpdateStatusAsync(id, userId, PaymentRequestStatus.Rejected);
 

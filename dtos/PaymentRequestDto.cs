@@ -12,6 +12,7 @@ namespace Caretaker.Models.Dtos
       public UserLiteDto Recipient { get; set; }
       public ServiceCategoryDto ServiceCategory { get; set; }
       public PaymentBeneficiaryDto Beneficiary { get; set; }
+      public PaymentAccountDto PaymentAccount { get; set; }
    }
 
    public class PaymentRequestLiteDto : BaseEntityDto
@@ -21,6 +22,7 @@ namespace Caretaker.Models.Dtos
       public decimal Amount { get; set; }
       public string Description { get; set; }
       public string Notes { get; set; }
-      public MemberLiteDto Member { get; set; }
+      public Guid? PaymentAccountId { get; set; }
+      public EstateManagerDto EstateManager { get; set; }
    }
 }

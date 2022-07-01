@@ -9,6 +9,7 @@ namespace Caretaker.Models.Dtos
       [Required]
       public Guid RecipientId { get; set; }
       public Guid? BankAccountId { get; set; }
+      public Guid? PaymentAccountId { get; set; }
       [Required]
       public decimal LocalAmount { get; set; }
       public string Description { get; set; }

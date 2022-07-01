@@ -2,10 +2,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Caretaker.Models.Dtos
 {
-   public class OrganizationCreationOptionsDto
+   public class PaymentAccountCreationOptionsDto
    {
       [Required]
       public string Name { get; set; }
-      public bool ManageFundsOffline { get; set; } = false;
    }
 }

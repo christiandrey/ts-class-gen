@@ -5,8 +5,6 @@ namespace Caretaker.Models.Dtos
 {
    public class MemberDto : MemberLiteDto
    {
-      public MemberPermissionDto Permissions { get; set; }
-      public decimal PaymentLimit { get; set; }
       public Guid OrganizationId { get; set; }
    }
 

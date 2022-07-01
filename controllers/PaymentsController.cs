@@ -11,6 +11,7 @@ using Caretaker.Models.Services.Payments.Others;
 using Caretaker.Models.Utilities.Response;
 using Caretaker.Services.Entities.Interfaces;
 using Caretaker.Services.Messaging;
+using Caretaker.Services.Permissions.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -24,9 +25,11 @@ namespace Caretaker.Controllers
    public class PaymentsController : BaseController
    {
       private readonly ICurrencyService _currencyService;
+      private readonly IEstateService _estateService;
       private readonly IMessagingService _messagingService;
       private readonly IPaymentService _paymentService;
       private readonly IPaymentBeneficiaryService _paymentBeneficiaryService;
+      private readonly IPermissionsService _permissionsService;
       private readonly IRecurringPaymentService _recurringPaymentService;
       private readonly IResidentService _residentService;
       private readonly IServiceChargeLogService _serviceChargeLogService;
@@ -34,18 +37,22 @@ namespace Caretaker.Controllers
 
       public PaymentsController(
          ICurrencyService currencyService,
+         IEstateService estateService,
          IMessagingService messagingService,
          IPaymentService paymentService,
          IPaymentBeneficiaryService paymentBeneficiaryService,
+         IPermissionsService permissionsService,
          IRecurringPaymentService recurringPaymentService,
          IResidentService residentService,
          IServiceChargeLogService serviceChargeLogService,
          IMapper mapper) : base(mapper)
       {
          _currencyService = currencyService;
+         _estateService = estateService;
          _messagingService = messagingService;
          _paymentService = paymentService;
          _paymentBeneficiaryService = paymentBeneficiaryService;
+         _permissionsService = permissionsService;
          _recurringPaymentService = recurringPaymentService;
          _residentService = residentService;
          _serviceChargeLogService = serviceChargeLogService;
@@ -80,6 +87,7 @@ namespace Caretaker.Controllers
                RecipientId = dto.RecipientId,
                Recurrence = dto.Recurrence,
                StartDate = dto.RecurrenceStartAt ?? DateTime.Now,
+               PaymentAccountId = dto.PaymentAccountId,
             };
 
             await _recurringPaymentService.CreateAsync(recurringPayment);
@@ -90,17 +98,21 @@ namespace Caretaker.Controllers
 
       [Authorize(Roles = nameof(UserRoleType.Resident))]
       [HttpPost("service-charge/{localAmount:decimal}")]
-      public async Task<ActionResult<Response<PaymentDto>>> CreateServiceChargePaymentAsync(decimal localAmount)
+      public async Task<ActionResult<Response<PaymentDto>>> CreateServiceChargePaymentAsync(decimal localAmount, Guid? paymentAccountId)
       {
          var userId = GetUserId();
 
          var resident = await _residentService.GetCurrentByUserIdAsync(userId, true);
+
+         await _permissionsService.AssertOrganizationManagesFundsOnlineAsync(resident.Apartment.EstateId);
 
          var apartment = resident.Apartment;
 
          var apartmentType = apartment.Type;
 
          var estate = resident.Apartment.Estate;
+
+         var paymentAccount = _estateService.GetPaymentAccountOrDefault(estate, paymentAccountId);
 
          if (estate == null || apartmentType.ServiceChargeAmount <= 0)
          {
@@ -133,6 +145,7 @@ namespace Caretaker.Controllers
             EstateId = estate.Id,
             Description = TransactionDescriptions.ServiceCharge,
             Mode = PaymentMode.Wallet,
+            PaymentAccountId = paymentAccountId,
          }, userId, amount);
 
          await _serviceChargeLogService.CreateAsync(new ServiceChargeLog
@@ -142,6 +155,7 @@ namespace Caretaker.Controllers
             Amount = amount,
             PaymentId = payment.Id,
             ApartmentId = apartment.Id,
+            PaymentAccountId = paymentAccountId,
          });
 
          if (isFullPayment && apartmentType.ServiceChargeRecurrence != Recurrence.None)
@@ -157,6 +171,7 @@ namespace Caretaker.Controllers
                EstateId = estate.Id,
                Recurrence = apartmentType.ServiceChargeRecurrence,
                StartDate = DateTime.Now,
+               PaymentAccountId = paymentAccountId,
             };
 
             await _recurringPaymentService.CreateAsync(recurringPayment);

@@ -5,11 +5,13 @@ namespace Caretaker.Models.Dtos
 {
    public class PaymentDto : PaymentLiteDto
    {
+      public PaymentAccountDto PaymentAccount { get; set; }
       public EstateLiteDto Estate { get; set; }
    }
 
    public class PaymentLiteDto : BaseEntityDto
    {
+      public bool IsEstateCredit { get; set; }
       public PaymentMode Mode { get; set; }
       public string Reference { get; set; }
       public string EvidenceUrl { get; set; }
@@ -19,6 +21,7 @@ namespace Caretaker.Models.Dtos
       public Guid? EstateId { get; set; }
       public Guid? ServiceCategoryId { get; set; }
       public Guid? BeneficiaryId { get; set; }
+      public Guid? PaymentAccountId { get; set; }
       public ServiceCategoryDto ServiceCategory { get; set; }
       public PaymentBeneficiaryDto Beneficiary { get; set; }
       public UserLiteDto User { get; set; }

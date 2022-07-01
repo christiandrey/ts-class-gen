@@ -14,12 +14,14 @@ namespace Caretaker.Models.Dtos
       public Guid? EstateId { get; set; }
       public Guid? BeneficiaryId { get; set; }
       public Guid? ServiceCategoryId { get; set; }
+      public Guid? PaymentAccountId { get; set; }
       public Recurrence Recurrence { get; set; }
       public PaymentMode Mode { get; set; }
       public CurrencyDto Currency { get; set; }
       public UserLiteDto Recipient { get; set; }
       public PaymentBeneficiaryDto Beneficiary { get; set; }
       public ServiceCategoryDto ServiceCategory { get; set; }
+      public PaymentAccountDto PaymentAccount { get; set; }
    }
 
    public class AdminRecurringPaymentDto : RecurringPaymentDto

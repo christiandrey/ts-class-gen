@@ -14,6 +14,7 @@ using Caretaker.Models.Utilities;
 using Caretaker.Models.Utilities.Response;
 using Caretaker.Services.Entities.Interfaces;
 using Caretaker.Services.Messaging;
+using Caretaker.Services.Permissions.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -28,9 +29,11 @@ namespace Caretaker.Controllers
    public class ResidentController : BaseController
    {
       private readonly ICurrencyService _currencyService;
+      private readonly IEstateService _estateService;
       private readonly IMessagingService _messagingService;
       private readonly IResidentService _residentService;
       private readonly IPaymentService _paymentService;
+      private readonly IPermissionsService _permissionsService;
       private readonly IProjectService _projectService;
       private readonly IServiceChargeLogService _serviceChargeLogService;
       private readonly ITransactionService _transactionService;
@@ -41,9 +44,11 @@ namespace Caretaker.Controllers
 
       public ResidentController(
          ICurrencyService currencyService,
+         IEstateService estateService,
          IMessagingService messagingService,
          IResidentService residentService,
          IPaymentService paymentService,
+         IPermissionsService permissionsService,
          IProjectService projectService,
          IServiceChargeLogService serviceChargeLogService,
          ITransactionService transactionService,
@@ -53,9 +58,11 @@ namespace Caretaker.Controllers
          IMapper mapper) : base(mapper)
       {
          _currencyService = currencyService;
+         _estateService = estateService;
          _messagingService = messagingService;
          _residentService = residentService;
          _paymentService = paymentService;
+         _permissionsService = permissionsService;
          _projectService = projectService;
          _serviceChargeLogService = serviceChargeLogService;
          _transactionService = transactionService;
@@ -115,7 +122,14 @@ namespace Caretaker.Controllers
       [HttpPatch("{id:guid}")]
       public async Task<ActionResult<Response<ResidentDto>>> UpdateAsync(Guid id, ResidentUpdateOptionsDto dto)
       {
+         var userId = GetUserId();
+
          var resident = await _residentService.UpdateAsync(id, _mapper.Map<ResidentUpdateOptions>(dto));
+
+         if (resident.Apartment.EstateId.HasValue)
+         {
+            await _permissionsService.AssertOrganizationScopeAsync(resident.Apartment.EstateId.Value, userId, OrganizationScopes.ApartmentManage);
+         }
 
          return Ok(_mapper.Map<ResidentDto>(resident));
       }
@@ -152,7 +166,7 @@ namespace Caretaker.Controllers
 
       [Authorize(Roles = nameof(UserRoleType.FacilityManager))]
       [HttpPost("{id:guid}/payments/service-charge/{localAmount:decimal}")]
-      public async Task<ActionResult<Response<PaymentDto>>> CreateOfflineServiceChargePayment(Guid id, decimal localAmount)
+      public async Task<ActionResult<Response<PaymentDto>>> CreateOfflineServiceChargePayment(Guid id, decimal localAmount, Guid? paymentAccountId)
       {
          var userId = GetUserId();
 
@@ -164,10 +178,9 @@ namespace Caretaker.Controllers
 
          var estate = resident.Apartment.Estate;
 
-         if (estate == null || estate.FacilityManager.UserId != userId)
-         {
-            return Forbid();
-         }
+         await _permissionsService.AssertOrganizationScopeAsync(estate.Id, userId, OrganizationScopes.IncomeRemit);
+
+         var paymentAccount = _estateService.GetPaymentAccountOrDefault(estate, paymentAccountId);
 
          var apartment = resident.Apartment;
 
@@ -184,9 +197,16 @@ namespace Caretaker.Controllers
 
          var amount = localAmount * currencyToBaseExchangeRate;
 
-         await _walletService.TransferFromWalletToWalletAsync(userWallet.Id, residentWallet.Id, amount);
+         if (estate.OrganizationId.HasValue && estate.Organization.ManageFundsOffline)
+         {
+            await _walletService.CreditAsync(residentWallet, amount);
+         }
+         else
+         {
+            await _walletService.TransferFromWalletToWalletAsync(userWallet.Id, residentWallet.Id, amount);
 
-         await _transactionService.CreateAsync(userId, amount, TransactionDescriptions.OfflineServiceChargeRemittance, TransactionMode.Wallet);
+            await _transactionService.CreateAsync(userId, amount, TransactionDescriptions.OfflineServiceChargeRemittance, TransactionMode.Wallet);
+         }
 
          await _transactionService.CreateAsync(resident.UserId, amount, TransactionDescriptions.Topup, TransactionMode.Wallet, true);
 
@@ -198,6 +218,7 @@ namespace Caretaker.Controllers
                RecipientId = estate.FacilityManager.UserId,
                Description = TransactionDescriptions.ServiceCharge,
                Mode = PaymentMode.Wallet,
+               PaymentAccountId = paymentAccountId,
             }, resident.UserId, amount);
 
             await _serviceChargeLogService.CreateAsync(new ServiceChargeLog
@@ -207,6 +228,7 @@ namespace Caretaker.Controllers
                Amount = amount,
                PaymentId = payment.Id,
                ApartmentId = apartment.Id,
+               PaymentAccountId = paymentAccountId,
             });
 
             var updatedResident = await _residentService.GetByIdAsync(id);
@@ -239,6 +261,13 @@ namespace Caretaker.Controllers
       {
          var userId = GetUserId();
 
+         var resident = await _residentService.GetByIdAsync(id, true);
+
+         if (resident.Apartment.EstateId.HasValue)
+         {
+            await _permissionsService.AssertOrganizationScopeAsync(resident.Apartment.EstateId.Value, userId, OrganizationScopes.ApartmentManage);
+         }
+
          await _residentService.DeleteAsync(id, userId);
 
          return Ok();
@@ -249,6 +278,13 @@ namespace Caretaker.Controllers
       public async Task<ActionResult<Response>> OffboardResidentAsync(Guid id)
       {
          var userId = GetUserId();
+
+         var resident = await _residentService.GetByIdAsync(id, true);
+
+         if (resident.Apartment.EstateId.HasValue)
+         {
+            await _permissionsService.AssertOrganizationScopeAsync(resident.Apartment.EstateId.Value, userId, OrganizationScopes.ApartmentManage);
+         }
 
          await _residentService.OffboardAsync(id, userId);
 

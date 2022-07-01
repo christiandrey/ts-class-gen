@@ -108,5 +108,23 @@ namespace Caretaker.Controllers
 
          return Ok(mailTemplates);
       }
+
+      [HttpPost("migrate/payment-accounts")]
+      [Authorize(Roles = nameof(UserRoleType.Admin))]
+      public async Task<ActionResult<Response>> MigrateToPaymentAccountsAsync()
+      {
+         await _dataMigrationService.MigrateToPaymentAccountsAsync();
+
+         return Ok();
+      }
+
+      [HttpPost("migrate/claims")]
+      [Authorize(Roles = nameof(UserRoleType.Admin))]
+      public async Task<ActionResult<Response>> MigrateToClaimsSystemAsync()
+      {
+         await _dataMigrationService.MigrateToClaimsSystemAsync();
+
+         return Ok();
+      }
    }
 }

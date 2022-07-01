@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net.Mime;
 using System.Threading.Tasks;
 using AutoMapper;
@@ -9,6 +11,7 @@ using Caretaker.Models.Enums;
 using Caretaker.Models.Services.Management;
 using Caretaker.Models.Utilities.Response;
 using Caretaker.Services.Entities.Interfaces;
+using Caretaker.Services.Permissions.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -23,17 +26,20 @@ namespace Caretaker.Controllers
    public class ApartmentController : BaseController
    {
       private readonly IApartmentService _apartmentService;
+      private readonly IPermissionsService _permissionsService;
       private readonly IResidentService _residentService;
       private readonly ILogger _logger;
       private readonly IMapper _mapper;
 
       public ApartmentController(
          IApartmentService apartmentService,
+         IPermissionsService permissionsService,
          IResidentService residentService,
          ILogger<ResidentController> logger,
          IMapper mapper) : base(mapper)
       {
          _apartmentService = apartmentService;
+         _permissionsService = permissionsService;
          _residentService = residentService;
          _mapper = mapper;
          _logger = logger;
@@ -43,6 +49,11 @@ namespace Caretaker.Controllers
       public async Task<ActionResult<Response<ApartmentDto>>> CreateAsync(ApartmentCreationOptionsDto options)
       {
          var userId = GetUserId();
+
+         if (options.EstateId.HasValue)
+         {
+            await _permissionsService.AssertOrganizationScopeAsync(options.EstateId.Value, userId, OrganizationScopes.ApartmentManage);
+         }
 
          var apartment = await _apartmentService.CreateAsync(_mapper.Map<ApartmentCreationOptions>(options), userId);
 
@@ -77,6 +88,29 @@ namespace Caretaker.Controllers
          return Ok(_mapper.Map<ApartmentDto>(apartment));
       }
 
+      [HttpGet("{id:guid}/balances")]
+      public async Task<ActionResult<Response<IEnumerable<ApartmentBalanceDto>>>> GetBalancesAsync(Guid id)
+      {
+         var apartment = await _apartmentService.GetByIdAsync(id);
+
+         if (apartment == null)
+         {
+            return NotFound(ResponseMessages.ApartmentNotExist);
+         }
+
+         var grouped = apartment.ServiceChargeLogs.GroupBy(o => o.PaymentAccount);
+
+         var apartmentBalances = grouped.OrderBy(group => group.Key.CreatedAt).Select(group => new ApartmentBalanceDto
+         {
+            Id = group.Key.Id,
+            CreatedAt = group.Key.CreatedAt,
+            PaymentAccount = _mapper.Map<PaymentAccountDto>(group.Key),
+            Balance = group.Sum(o => o.Amount * (o.IsCredit ? 1 : -1)),
+         });
+
+         return Ok(apartmentBalances);
+      }
+
       [Authorize(Roles = nameof(UserRoleType.Admin))]
       [HttpGet("")]
       public async Task<ActionResult<PaginatedResponse<ApartmentLiteDto>>> GetAllAsync(string query = null, int page = 1, int pageSize = 30)
@@ -89,6 +123,10 @@ namespace Caretaker.Controllers
       [HttpPatch("{id:guid}")]
       public async Task<ActionResult<Response<ApartmentDto>>> UpdateAsync(Guid id, ApartmentUpdateOptionsDto options)
       {
+         var userId = GetUserId();
+
+         await _permissionsService.AssertOrganizationApartmentScopeAsync(id, userId, OrganizationScopes.ApartmentManage);
+
          var apartment = await _apartmentService.UpdateAsync(id, _mapper.Map<ApartmentUpdateOptions>(options));
 
          return Ok(_mapper.Map<ApartmentDto>(apartment));
@@ -98,6 +136,8 @@ namespace Caretaker.Controllers
       public async Task<ActionResult<Response>> DeleteAsync(Guid id)
       {
          var userId = GetUserId();
+
+         await _permissionsService.AssertOrganizationApartmentScopeAsync(id, userId, OrganizationScopes.ApartmentManage);
 
          await _apartmentService.DeleteAsync(id);
 

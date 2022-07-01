@@ -11,6 +11,7 @@ using Caretaker.Models.Entities;
 using Caretaker.Models.Enums;
 using Caretaker.Models.Utilities.Response;
 using Caretaker.Services.Entities.Interfaces;
+using Caretaker.Services.Permissions.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -24,13 +25,16 @@ namespace Caretaker.Controllers
    public class CommunityController : BaseController
    {
       private readonly ICommunityService _communityService;
+      private readonly IPermissionsService _permissionsService;
       private readonly IMapper _mapper;
 
       public CommunityController(
          ICommunityService communityService,
+         IPermissionsService permissionsService,
          IMapper mapper) : base(mapper)
       {
          _communityService = communityService;
+         _permissionsService = permissionsService;
          _mapper = mapper;
       }
 
@@ -47,6 +51,8 @@ namespace Caretaker.Controllers
       public async Task<ActionResult<Response<CommunityTopicDto>>> CreateTopicAsync(CommunityTopicCreationOptionsDto dto)
       {
          var userId = GetUserId();
+
+         await _permissionsService.AssertOrganizationCommunityScopeAsync(dto.EstateId, userId, OrganizationScopes.CommunityContribute);
 
          var topic = await _communityService.CreateTopicAsync(userId, _mapper.Map<CommunityTopic>(dto));
 

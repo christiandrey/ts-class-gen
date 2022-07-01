@@ -13,6 +13,7 @@ using Caretaker.Models.Services.Review;
 using Caretaker.Models.Utilities;
 using Caretaker.Models.Utilities.Response;
 using Caretaker.Services.Entities.Interfaces;
+using Caretaker.Services.Permissions.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -26,13 +27,16 @@ namespace Caretaker.Controllers
    public class ProjectController : BaseController
    {
       private readonly IProjectService _projectService;
+      private readonly IPermissionsService _permissionsService;
       private readonly IMapper _mapper;
 
       public ProjectController(
          IProjectService projectService,
+         IPermissionsService permissionsService,
          IMapper mapper) : base(mapper)
       {
          _projectService = projectService;
+         _permissionsService = permissionsService;
          _mapper = mapper;
       }
 
@@ -118,6 +122,8 @@ namespace Caretaker.Controllers
       {
          var userId = GetUserId();
 
+         await _permissionsService.AssertOrganizationProjectAsync(id, userId, OrganizationScopes.IssueManage);
+
          var project = await _projectService.UpdateVendorAsync(id, userId, vendorId);
 
          return Ok(_mapper.Map<ProjectDto>(project));
@@ -127,6 +133,8 @@ namespace Caretaker.Controllers
       public async Task<ActionResult<Response<ProjectDto>>> UpdateStatusAsync(Guid id, ProjectStatusUpdateDto dto)
       {
          var userId = GetUserId();
+
+         await _permissionsService.AssertOrganizationProjectStatusAsync(id, userId, OrganizationScopes.IssueManage);
 
          var project = await _projectService.UpdateStatusAsync(id, userId, dto.Status);
 
