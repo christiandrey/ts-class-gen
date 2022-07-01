@@ -80,6 +80,11 @@ export type EstateCreationOptions = {
     servicesIds: Array<string>;
 }
 
+export type EstateManagerCreationOptions = {
+    memberId: string;
+    organizationClaimId: string;
+}
+
 export type EstateUpdateOptions = {
     name: string;
     placeId: string;
@@ -112,9 +117,6 @@ export type MemberCreationOptions = {
 export type MemberInvitationOptions = {
     facilityManagerId: string;
     isAdmin: boolean;
-    canOffboardResident: boolean;
-    canOnboardResident: boolean;
-    canAddNewApartment: boolean;
 }
 
 export type MemberPermissionUpdateOptions = {
@@ -127,11 +129,30 @@ export type MemberRoleTypeUpdateOptions = {
     role: MemberRoleType;
 }
 
+export type OrganizationClaimCreationOptions = {
+    name: string;
+    scopes: Array<string>;
+}
+
+export type OrganizationClaimUpdateOptions = {
+    name: string;
+    scopes: Array<string>;
+}
+
 export type OrganizationCreationOptions = {
     name: string;
+    manageFundsOffline: boolean;
 }
 
 export type OrganizationUpdateOptions = {
+    name: string;
+}
+
+export type PaymentAccountCreationOptions = {
+    name: string;
+}
+
+export type PaymentAccountUpdateOptions = {
     name: string;
 }
 
@@ -145,6 +166,7 @@ export type PaymentBeneficiaryCreationOptions = {
 export type PaymentCreationOptions = {
     recipientId: string;
     bankAccountId?: string;
+    paymentAccountId?: string;
     localAmount: number;
     description: string;
     notes: string;

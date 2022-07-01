@@ -1,5 +1,6 @@
 import {PaymentMode, Recurrence} from '../typings';
 import {EstateLite} from './estate-lite';
+import {PaymentAccount} from './payment-account';
 import {PaymentBeneficiary} from './payment-beneficiary';
 import {PaymentRequestLite} from './payment-request-lite';
 import {ServiceCategory} from './service-category';
@@ -13,6 +14,7 @@ export class PaymentRequest extends PaymentRequestLite {
     recipient: UserLite;
     serviceCategory: ServiceCategory;
     beneficiary: PaymentBeneficiary;
+    paymentAccount: PaymentAccount;
 
     constructor(dto: PaymentRequest) {
         super(dto);
@@ -24,5 +26,6 @@ export class PaymentRequest extends PaymentRequestLite {
         this.recipient = new UserLite(dto.recipient);
         this.serviceCategory = new ServiceCategory(dto.serviceCategory);
         this.beneficiary = new PaymentBeneficiary(dto.beneficiary);
+        this.paymentAccount = new PaymentAccount(dto.paymentAccount);
     }
 }

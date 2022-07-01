@@ -1,5 +1,5 @@
 import {MemberEntities, memberSchema} from '../../../schemas/normalization/member';
-import {MemberCreationOptions, MemberInvitationOptions, MemberPermissionUpdateOptions, MemberRoleTypeUpdateOptions} from '../../../typings/dtos';
+import {MemberCreationOptions, MemberInvitationOptions, MemberRoleTypeUpdateOptions} from '../../../typings/dtos';
 import {createTypedAsyncThunk, safeNormalize} from '../../../utils/redux';
 
 import {Member} from '../../../entities/member';
@@ -30,28 +30,6 @@ export const updateRoleMember = createTypedAsyncThunk(
     async (params: {id: string; dto: MemberRoleTypeUpdateOptions}) => {
         const {id, dto} = params;
         const response = await api.members().updateRole(id, dto);
-        const responseData = new Member(response.data.data);
-        const normalized = safeNormalize<Member, MemberEntities, string>(responseData, memberSchema);
-        return normalized;
-    },
-);
-
-export const updatePaymentLimitMember = createTypedAsyncThunk(
-    'members/updatePaymentLimitMember',
-    async (params: {id: string; paymentLimit: number}) => {
-        const {id, paymentLimit} = params;
-        const response = await api.members().updatePaymentLimit(id, paymentLimit);
-        const responseData = new Member(response.data.data);
-        const normalized = safeNormalize<Member, MemberEntities, string>(responseData, memberSchema);
-        return normalized;
-    },
-);
-
-export const updatePermissionsMember = createTypedAsyncThunk(
-    'members/updatePermissionsMember',
-    async (params: {id: string; dto: MemberPermissionUpdateOptions}) => {
-        const {id, dto} = params;
-        const response = await api.members().updatePermissions(id, dto);
         const responseData = new Member(response.data.data);
         const normalized = safeNormalize<Member, MemberEntities, string>(responseData, memberSchema);
         return normalized;

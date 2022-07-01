@@ -1,3 +1,4 @@
+import {ApartmentBalance} from './apartment-balance';
 import {Apartment} from './apartment';
 import {ApartmentLite} from './apartment-lite';
 import {ApartmentType} from './apartment-type';
@@ -17,6 +18,7 @@ import {UpdatedCountry} from './updated-country';
 import {Currency} from './currency';
 import {Estate} from './estate';
 import {EstateLite} from './estate-lite';
+import {EstateManager} from './estate-manager';
 import {EstateWallet} from './estate-wallet';
 import {Event} from './event';
 import {FacilityManager} from './facility-manager';
@@ -37,9 +39,12 @@ import {MemberPermission} from './member-permission';
 import {Messaging} from './messaging';
 import {Notification} from './notification';
 import {OnboardedUser} from './onboarded-user';
+import {OrganizationClaim} from './organization-claim';
 import {Organization} from './organization';
+import {OrganizationScope} from './organization-scope';
 import {OrganizationWallet} from './organization-wallet';
 import {Owner} from './owner';
+import {PaymentAccount} from './payment-account';
 import {PaymentBeneficiary} from './payment-beneficiary';
 import {Payment} from './payment';
 import {PaymentLite} from './payment-lite';
@@ -89,4 +94,4 @@ import {Withdrawal} from './withdrawal';
 import {AdminWithdrawal} from './admin-withdrawal';
 import {WithdrawalSummary} from './withdrawal-summary';
 
-export {Apartment,ApartmentLite,ApartmentType,AppleUser,AuthResponse,Authenticate,AutoCompleteResult,BankAccount,BaseEntity,Card,CheckEmail,CommunityCategory,CommunityComment,CommunityTopic,Country,UpdatedCountry,Currency,Estate,EstateLite,EstateWallet,Event,FacilityManager,FacilityManagerLog,FaqCategory,Faq,Ghost,Invitation,Location,LogLite,Log,MailAddress,MailTemplate,Mailing,Member,MemberLite,MemberPermission,Messaging,Notification,OnboardedUser,Organization,OrganizationWallet,Owner,PaymentBeneficiary,Payment,PaymentLite,PaymentRequest,PaymentRequestLite,PaymentSummary,PlotPoint,Polyline,Project,ProjectLite,ProjectMessage,ProjectResource,ProjectStatusUpdate,RecurringPayment,AdminRecurringPayment,Register,ResetPassword,Resident,ResidentLite,ResidentInvitation,ResolvedCard,Resource,Review,Role,ServiceCategory,ServiceChargeLog,SocialUser,Stat,State,UpdatedState,Transaction,UpdatedCurrency,UpdatedUser,UserAccounts,UserCurrentAccount,UserSummary,User,UserLite,Vendor,VendorLite,VendorInvitation,VerifyEmail,VerifyPhone,VerifyResetCode,Wallet,Withdrawal,AdminWithdrawal,WithdrawalSummary}
+export {ApartmentBalance,Apartment,ApartmentLite,ApartmentType,AppleUser,AuthResponse,Authenticate,AutoCompleteResult,BankAccount,BaseEntity,Card,CheckEmail,CommunityCategory,CommunityComment,CommunityTopic,Country,UpdatedCountry,Currency,Estate,EstateLite,EstateManager,EstateWallet,Event,FacilityManager,FacilityManagerLog,FaqCategory,Faq,Ghost,Invitation,Location,LogLite,Log,MailAddress,MailTemplate,Mailing,Member,MemberLite,MemberPermission,Messaging,Notification,OnboardedUser,OrganizationClaim,Organization,OrganizationScope,OrganizationWallet,Owner,PaymentAccount,PaymentBeneficiary,Payment,PaymentLite,PaymentRequest,PaymentRequestLite,PaymentSummary,PlotPoint,Polyline,Project,ProjectLite,ProjectMessage,ProjectResource,ProjectStatusUpdate,RecurringPayment,AdminRecurringPayment,Register,ResetPassword,Resident,ResidentLite,ResidentInvitation,ResolvedCard,Resource,Review,Role,ServiceCategory,ServiceChargeLog,SocialUser,Stat,State,UpdatedState,Transaction,UpdatedCurrency,UpdatedUser,UserAccounts,UserCurrentAccount,UserSummary,User,UserLite,Vendor,VendorLite,VendorInvitation,VerifyEmail,VerifyPhone,VerifyResetCode,Wallet,Withdrawal,AdminWithdrawal,WithdrawalSummary}

@@ -1,6 +1,6 @@
 import {PaymentRequestStatus} from '../typings';
 import {BaseEntity} from './base-entity';
-import {MemberLite} from './member-lite';
+import {EstateManager} from './estate-manager';
 
 export class PaymentRequestLite extends BaseEntity {
     status: PaymentRequestStatus;
@@ -8,7 +8,8 @@ export class PaymentRequestLite extends BaseEntity {
     amount: number;
     description: string;
     notes: string;
-    member: MemberLite;
+    paymentAccountId?: string;
+    estateManager: EstateManager;
 
     constructor(dto: PaymentRequestLite) {
         super(dto);
@@ -18,6 +19,7 @@ export class PaymentRequestLite extends BaseEntity {
         this.amount = dto.amount;
         this.description = dto.description;
         this.notes = dto.notes;
-        this.member = new MemberLite(dto.member);
+        this.paymentAccountId = dto.paymentAccountId;
+        this.estateManager = new EstateManager(dto.estateManager);
     }
 }

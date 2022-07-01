@@ -44,9 +44,9 @@ export const fetchPaymentsByResident = createTypedAsyncThunk(
 
 export const createOfflineServiceChargePaymentForResident = createTypedAsyncThunk(
     'payments/createOfflineServiceChargePaymentForResident',
-    async (params: {id: string; localAmount: number}) => {
-        const {id, localAmount} = params;
-        const response = await api.residents().createOfflineServiceChargePayment(id, localAmount);
+    async (params: {id: string; localAmount: number; paymentAccountId?: string}) => {
+        const {id, localAmount, paymentAccountId} = params;
+        const response = await api.residents().createOfflineServiceChargePayment(id, localAmount, paymentAccountId);
         const responseData = new Payment(response.data.data);
         const normalized = safeNormalize<Payment, PaymentEntities, string>(responseData, paymentSchema);
         return normalized;

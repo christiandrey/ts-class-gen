@@ -9,6 +9,7 @@ import communityCategoryCreationOptions from './community-category-creation-opti
 import communityTopicCreationOptions from './community-topic-creation-options';
 import updatedCountry from './updated-country';
 import estateCreationOptions from './estate-creation-options';
+import estateManagerCreationOptions from './estate-manager-creation-options';
 import event from './event';
 import faqCategoryCreationOptions from './faq-category-creation-options';
 import faqCreationOptions from './faq-creation-options';
@@ -18,7 +19,9 @@ import memberCreationOptions from './member-creation-options';
 import memberInvitationOptions from './member-invitation-options';
 import memberRoleTypeUpdateOptions from './member-role-type-update-options';
 import messaging from './messaging';
+import organizationClaimCreationOptions from './organization-claim-creation-options';
 import organizationCreationOptions from './organization-creation-options';
+import paymentAccountCreationOptions from './payment-account-creation-options';
 import paymentBeneficiaryCreationOptions from './payment-beneficiary-creation-options';
 import paymentCreationOptions from './payment-creation-options';
 import paymentUpdateOptions from './payment-update-options';
@@ -44,4 +47,4 @@ import verifyEmail from './verify-email';
 import verifyPhone from './verify-phone';
 import verifyResetCode from './verify-reset-code';
 
-export const validationSchemas = {apartmentCreationOptions,apartmentTypeCreationOptions,appleUser,authenticate,bankAccountCreationOptions,checkEmail,commissionUpdateOptions,communityCategoryCreationOptions,communityTopicCreationOptions,updatedCountry,estateCreationOptions,event,faqCategoryCreationOptions,faqCreationOptions,mailAddress,mailing,memberCreationOptions,memberInvitationOptions,memberRoleTypeUpdateOptions,messaging,organizationCreationOptions,paymentBeneficiaryCreationOptions,paymentCreationOptions,paymentUpdateOptions,projectCreationOptions,projectMessageCreationOptions,projectResourceCreationOptions,projectStatusUpdate,register,resetPassword,residentInvitationCreationOptions,reviewOptions,role,serviceCategoryCreationOptions,serviceChargeUpdateOptions,socialUser,updatedState,updatedCurrency,updatedUser,userLite,vendorCreationOptions,vendorInvitationCreationOptions,verifyEmail,verifyPhone,verifyResetCode}
+export const validationSchemas = {apartmentCreationOptions,apartmentTypeCreationOptions,appleUser,authenticate,bankAccountCreationOptions,checkEmail,commissionUpdateOptions,communityCategoryCreationOptions,communityTopicCreationOptions,updatedCountry,estateCreationOptions,estateManagerCreationOptions,event,faqCategoryCreationOptions,faqCreationOptions,mailAddress,mailing,memberCreationOptions,memberInvitationOptions,memberRoleTypeUpdateOptions,messaging,organizationClaimCreationOptions,organizationCreationOptions,paymentAccountCreationOptions,paymentBeneficiaryCreationOptions,paymentCreationOptions,paymentUpdateOptions,projectCreationOptions,projectMessageCreationOptions,projectResourceCreationOptions,projectStatusUpdate,register,resetPassword,residentInvitationCreationOptions,reviewOptions,role,serviceCategoryCreationOptions,serviceChargeUpdateOptions,socialUser,updatedState,updatedCurrency,updatedUser,userLite,vendorCreationOptions,vendorInvitationCreationOptions,verifyEmail,verifyPhone,verifyResetCode}

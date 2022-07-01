@@ -9,6 +9,7 @@ CommunityCategoryCreationOptions
 CommunityCommentCreationOptions
 CommunityTopicCreationOptions
 EstateCreationOptions
+EstateManagerCreationOptions
 EstateUpdateOptions
 FaqCategoryCreationOptions
 FaqCreationOptions
@@ -16,8 +17,12 @@ MemberCreationOptions
 MemberInvitationOptions
 MemberPermissionUpdateOptions
 MemberRoleTypeUpdateOptions
+OrganizationClaimCreationOptions
+OrganizationClaimUpdateOptions
 OrganizationCreationOptions
 OrganizationUpdateOptions
+PaymentAccountCreationOptions
+PaymentAccountUpdateOptions
 PaymentBeneficiaryCreationOptions
 PaymentCreationOptions
 PaymentUpdateOptions

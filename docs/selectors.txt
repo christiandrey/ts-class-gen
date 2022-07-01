@@ -6,6 +6,7 @@ adminWithdrawalEntitiesSelector
 adminWithdrawalRelationsSelector
 allAdminRecurringPaymentsSelector
 allAdminWithdrawalsSelector
+allApartmentBalancesSelector
 allApartmentTypesSelector
 allApartmentsSelector
 allBankAccountsSelector
@@ -15,6 +16,7 @@ allCommunityCommentsSelector
 allCommunityTopicsSelector
 allCountriesSelector
 allCurrenciesSelector
+allEstateManagersSelector
 allEstateWalletsSelector
 allEstatesSelector
 allFacilityManagerLogsSelector
@@ -27,9 +29,11 @@ allLogsSelector
 allMemberPermissionsSelector
 allMembersSelector
 allNotificationsSelector
+allOrganizationClaimsSelector
 allOrganizationWalletsSelector
 allOrganizationsSelector
 allOwnersSelector
+allPaymentAccountsSelector
 allPaymentBeneficiariesSelector
 allPaymentRequestsSelector
 allPaymentsSelector
@@ -50,6 +54,9 @@ allVendorInvitationsSelector
 allVendorsSelector
 allWalletsSelector
 allWithdrawalsSelector
+apartmentBalanceByIdSelector
+apartmentBalanceEntitiesSelector
+apartmentBalanceRelationsSelector
 apartmentByIdSelector
 apartmentEntitiesSelector
 apartmentRelationsSelector
@@ -79,6 +86,9 @@ currencyEntitiesSelector
 currencyRelationsSelector
 estateByIdSelector
 estateEntitiesSelector
+estateManagerByIdSelector
+estateManagerEntitiesSelector
+estateManagerRelationsSelector
 estateRelationsSelector
 estateWalletByIdSelector
 estateWalletEntitiesSelector
@@ -114,6 +124,9 @@ notificationByIdSelector
 notificationEntitiesSelector
 notificationRelationsSelector
 organizationByIdSelector
+organizationClaimByIdSelector
+organizationClaimEntitiesSelector
+organizationClaimRelationsSelector
 organizationEntitiesSelector
 organizationRelationsSelector
 organizationWalletByIdSelector
@@ -122,6 +135,9 @@ organizationWalletRelationsSelector
 ownerByIdSelector
 ownerEntitiesSelector
 ownerRelationsSelector
+paymentAccountByIdSelector
+paymentAccountEntitiesSelector
+paymentAccountRelationsSelector
 paymentBeneficiaryByIdSelector
 paymentBeneficiaryEntitiesSelector
 paymentBeneficiaryRelationsSelector

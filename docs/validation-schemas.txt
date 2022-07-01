@@ -9,6 +9,7 @@ communityCategoryCreationOptions
 communityTopicCreationOptions
 updatedCountry
 estateCreationOptions
+estateManagerCreationOptions
 event
 faqCategoryCreationOptions
 faqCreationOptions
@@ -18,7 +19,9 @@ memberCreationOptions
 memberInvitationOptions
 memberRoleTypeUpdateOptions
 messaging
+organizationClaimCreationOptions
 organizationCreationOptions
+paymentAccountCreationOptions
 paymentBeneficiaryCreationOptions
 paymentCreationOptions
 paymentUpdateOptions

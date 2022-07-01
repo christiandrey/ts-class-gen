@@ -49,6 +49,17 @@ export const fundOrganizationWalletForOrganization = createTypedAsyncThunk(
     },
 );
 
+export const withdrawFromOrganizationWalletForOrganization = createTypedAsyncThunk(
+    'transactions/withdrawFromOrganizationWalletForOrganization',
+    async (params: {id: string; localAmount: number}) => {
+        const {id, localAmount} = params;
+        const response = await api.organizations().withdrawFromOrganizationWallet(id, localAmount);
+        const responseData = new Transaction(response.data.data);
+        const normalized = safeNormalize<Transaction, TransactionEntities, string>(responseData, transactionSchema);
+        return normalized;
+    },
+);
+
 export const fetchTransactionsByUser = createTypedAsyncThunk(
     'transactions/fetchTransactionsByUser',
     async (params: PaginatedQueryParams<{startDate?: string; endDate?: string}>) => {

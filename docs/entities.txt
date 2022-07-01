@@ -1,3 +1,4 @@
+ApartmentBalance
 Apartment
 ApartmentLite
 ApartmentType
@@ -17,6 +18,7 @@ UpdatedCountry
 Currency
 Estate
 EstateLite
+EstateManager
 EstateWallet
 Event
 FacilityManager
@@ -37,9 +39,12 @@ MemberPermission
 Messaging
 Notification
 OnboardedUser
+OrganizationClaim
 Organization
+OrganizationScope
 OrganizationWallet
 Owner
+PaymentAccount
 PaymentBeneficiary
 Payment
 PaymentLite

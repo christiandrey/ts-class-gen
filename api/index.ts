@@ -5,6 +5,7 @@ const apartments = () => {
         create: (options: ApartmentCreationOptions) => instance.post<ApiResponse<Apartment>>(build(path), options),
         readCurrent: () => instance.get<ApiResponse<Apartment>>(build(path, 'current')),
         readById: (id: string) => instance.get<ApiResponse<Apartment>>(build(path, id)),
+        readBalances: (id: string) => instance.get<ApiResponse<Array<ApartmentBalance>>>(build(path, id, 'balances')),
         readAll: (query?: string, page = 1, pageSize = 30) => instance.get<PaginatedApiResponse<ApartmentLite>>(build(path), {params:{query, page, pageSize}}),
         update: (id: string, options: ApartmentUpdateOptions) => instance.patch<ApiResponse<Apartment>>(build(path, id), options),
         delete: (id: string) => instance.delete<ApiResponse>(build(path, id)),
@@ -101,15 +102,26 @@ const estates = () => {
         readCommunityCategories: (id: string) => instance.get<ApiResponse<Array<CommunityCategory>>>(build(path, id, 'community', 'categories')),
         readVendors: (id: string) => instance.get<ApiResponse<Array<VendorLite>>>(build(path, id, 'vendors')),
         readWalletBalance: (id: string) => instance.get<ApiResponse<number>>(build(path, id, 'wallet-balance')),
+        readEstateManagers: (id: string) => instance.get<ApiResponse<Array<EstateManager>>>(build(path, id, 'managers')),
+        createEstateManager: (id: string, dto: EstateManagerCreationOptions) => instance.post<ApiResponse<EstateManager>>(build(path, id, 'managers'), dto),
+        updateEstateManagerClaim: (id: string, estateManagerId: string, claimId: string) => instance.put<ApiResponse<EstateManager>>(build(path, id, 'managers', estateManagerId, 'claims', claimId)),
+        updateEstateManagerPaymentLimit: (id: string, estateManagerId: string, localAmount: number) => instance.put<ApiResponse<EstateManager>>(build(path, id, 'managers', estateManagerId, 'claims', localAmount)),
+        activateEstateManager: (id: string, estateManagerId: string) => instance.put<ApiResponse<EstateManager>>(build(path, id, 'managers', estateManagerId, 'activate')),
+        deactivateEstateManager: (id: string, estateManagerId: string) => instance.put<ApiResponse<EstateManager>>(build(path, id, 'managers', estateManagerId, 'deactivate')),
         readPayments: (id: string, query?: string, page = 1, pageSize = 30) => instance.get<PaginatedApiResponse<PaymentLite>>(build(path, id, 'payments'), {params:{query, page, pageSize}}),
-        readPaymentRequests: (id: string, query?: string, page = 1, pageSize = 30) => instance.get<PaginatedApiResponse<PaymentRequestLite>>(build(path, id, 'payment-requests'), {params:{query, page, pageSize}}),
+        readPaymentRequests: (id: string, query?: string, page = 1, pageSize = 30) => instance.get<PaginatedApiResponse<PaymentRequestLite>>(build(path, id, 'payments', 'requests'), {params:{query, page, pageSize}}),
         readRecurringPayments: (id: string, page = 1, pageSize = 30) => instance.get<PaginatedApiResponse<RecurringPayment>>(build(path, id, 'payments', 'recurring'), {params:{page, pageSize}}),
+        readPaymentAccounts: (id: string) => instance.get<ApiResponse<Array<PaymentAccount>>>(build(path, id, 'payments', 'accounts')),
+        createPaymentAccount: (id: string, dto: PaymentAccountCreationOptions) => instance.post<ApiResponse<PaymentAccount>>(build(path, id, 'payments', 'accounts'), dto),
+        updatePaymentAccount: (id: string, paymentAccountId: string, dto: PaymentAccountUpdateOptions) => instance.patch<ApiResponse<PaymentAccount>>(build(path, id, 'payments', 'accounts', paymentAccountId), dto),
+        activatePaymentAccount: (id: string, paymentAccountId: string) => instance.put<ApiResponse<PaymentAccount>>(build(path, id, 'payments', 'accounts', paymentAccountId, 'activate')),
+        deactivatePaymentAccount: (id: string, paymentAccountId: string) => instance.put<ApiResponse<PaymentAccount>>(build(path, id, 'payments', 'accounts', paymentAccountId, 'deactivate')),
         readPaymentBeneficiaries: (id: string) => instance.get<ApiResponse<Array<PaymentBeneficiary>>>(build(path, id, 'payments', 'beneficiaries')),
         createPaymentBeneficiary: (id: string, dto: PaymentBeneficiaryCreationOptions) => instance.post<ApiResponse<PaymentBeneficiary>>(build(path, id, 'payments', 'beneficiaries'), dto),
         addPaymentBeneficiary: (id: string, beneficiaryId: string) => instance.put<ApiResponse<PaymentBeneficiary>>(build(path, id, 'payments', 'beneficiaries', beneficiaryId)),
         removePaymentBeneficiary: (id: string, beneficiaryId: string) => instance.delete<ApiResponse<PaymentBeneficiary>>(build(path, id, 'payments', 'beneficiaries', beneficiaryId)),
         createPayment: (id: string, dto: PaymentCreationOptions, serviceCategoryId?: string, beneficiaryId?: string) => instance.post<ApiResponse<Payment>>(build(path, id, 'payments'), dto, {params:{serviceCategoryId, beneficiaryId}}),
-        createPaymentRequest: (id: string, dto: PaymentCreationOptions, serviceCategoryId?: string, beneficiaryId?: string) => instance.post<ApiResponse<PaymentRequest>>(build(path, id, 'payment-requests'), dto, {params:{serviceCategoryId, beneficiaryId}}),
+        createPaymentRequest: (id: string, dto: PaymentCreationOptions, serviceCategoryId?: string, beneficiaryId?: string) => instance.post<ApiResponse<PaymentRequest>>(build(path, id, 'payments', 'requests'), dto, {params:{serviceCategoryId, beneficiaryId}}),
         readFacilityManager: (id: string) => instance.get<ApiResponse<FacilityManager>>(build(path, id, 'facility-manager')),
         readFacilityManagerLogs: (id: string) => instance.get<ApiResponse<Array<FacilityManagerLog>>>(build(path, id, 'facility-manager', 'logs')),
         delete: (id: string) => instance.delete<ApiResponse>(build(path, id)),
@@ -252,10 +264,9 @@ const members = () => {
     return {
         readCurrent: () => instance.get<ApiResponse<Member>>(build(path, 'current')),
         readById: (id: string) => instance.get<ApiResponse<Member>>(build(path, id)),
+        readEstateManagers: (id: string) => instance.get<ApiResponse<Array<EstateManager>>>(build(path, id, 'estate-managers')),
         readPaymentRequests: (id: string, query?: string, page = 1, pageSize = 30) => instance.get<PaginatedApiResponse<PaymentRequestLite>>(build(path, id, 'payment-requests'), {params:{query, page, pageSize}}),
         updateRole: (id: string, dto: MemberRoleTypeUpdateOptions) => instance.put<ApiResponse<Member>>(build(path, id, 'role'), dto),
-        updatePaymentLimit: (id: string, paymentLimit: number) => instance.put<ApiResponse<Member>>(build(path, id, 'payment-limit', paymentLimit)),
-        updatePermissions: (id: string, dto: MemberPermissionUpdateOptions) => instance.patch<ApiResponse<Member>>(build(path, id, 'permissions'), dto),
         delete: (id: string) => instance.delete<ApiResponse>(build(path, id)),
     }
 }
@@ -273,13 +284,19 @@ const organizations = () => {
 
     return {
         create: (dto: OrganizationCreationOptions) => instance.post<ApiResponse<Organization>>(build(path), dto),
+        readClaims: (id: string) => instance.get<ApiResponse<Array<OrganizationClaim>>>(build(path, id, 'claims')),
+        createClaim: (id: string, dto: OrganizationClaimCreationOptions) => instance.post<ApiResponse<OrganizationClaim>>(build(path, id, 'claims'), dto),
+        updateClaim: (id: string, claimId: string, dto: OrganizationClaimUpdateOptions) => instance.patch<ApiResponse<OrganizationClaim>>(build(path, id, 'claims', claimId), dto),
+        deleteClaim: (id: string, claimId: string) => instance.delete<ApiResponse>(build(path, id, 'claims', claimId)),
         readCurrentOrganization: () => instance.get<ApiResponse<Organization>>(build(path, 'current')),
+        readAllOrganizationScopes: () => instance.get<ApiResponse<Array<OrganizationScope>>>(build(path, 'scopes')),
         readById: (id: string) => instance.get<ApiResponse<Organization>>(build(path, id)),
         update: (id: string, dto: OrganizationUpdateOptions) => instance.patch<ApiResponse<Organization>>(build(path, id), dto),
         readPaymentRequests: (id: string, query?: string, page = 1, pageSize = 30) => instance.get<PaginatedApiResponse<PaymentRequestLite>>(build(path, id, 'payment-requests'), {params:{query, page, pageSize}}),
         readEstates: (id: string) => instance.get<ApiResponse<Array<EstateLite>>>(build(path, id, 'estates')),
         readWalletBalance: (id: string) => instance.get<ApiResponse<number>>(build(path, id, 'wallet-balance')),
         fundOrganizationWallet: (id: string, localAmount: number) => instance.post<ApiResponse<Transaction>>(build(path, id, 'wallet', 'fund', localAmount)),
+        withdrawFromOrganizationWallet: (id: string, localAmount: number) => instance.post<ApiResponse<Transaction>>(build(path, id, 'wallet', 'withdraw', localAmount)),
         createMember: (id: string, dto: MemberCreationOptions) => instance.post<ApiResponse<Member>>(build(path, id, 'members'), dto),
         inviteMember: (id: string, dto: MemberInvitationOptions) => instance.post<ApiResponse<Member>>(build(path, id, 'members', 'invite'), dto),
     }
@@ -300,7 +317,7 @@ const payments = () => {
 
     return {
         createPayment: (dto: PaymentCreationOptions) => instance.post<ApiResponse<Payment>>(build(path), dto),
-        createServiceChargePayment: (localAmount: number) => instance.post<ApiResponse<Payment>>(build(path, 'service-charge', localAmount)),
+        createServiceChargePayment: (localAmount: number, paymentAccountId?: string) => instance.post<ApiResponse<Payment>>(build(path, 'service-charge', localAmount), null, {params:{paymentAccountId}}),
         readPaymentsByUser: (page = 1, pageSize = 30) => instance.get<PaginatedApiResponse<Payment>>(build(path), {params:{page, pageSize}}),
         readPaymentId: (id: string) => instance.get<ApiResponse<Payment>>(build(path, id)),
         readSummaryByUser: () => instance.get<ApiResponse<PaymentSummary>>(build(path, 'summary')),
@@ -351,7 +368,7 @@ const residents = () => {
         readProjects: (projectQuery: ProjectQuery, page = 1, pageSize = 30) => instance.get<PaginatedApiResponse<ProjectLite>>(build(path, 'current', 'projects'), {params:{...projectQuery, page, pageSize}}),
         readProjectsByResident: (projectQuery: ProjectQuery, id: string, page = 1, pageSize = 30) => instance.get<PaginatedApiResponse<ProjectLite>>(build(path, id, 'projects'), {params:{...projectQuery, page, pageSize}}),
         readPayments: (id: string, query?: string, page = 1, pageSize = 30) => instance.get<PaginatedApiResponse<PaymentLite>>(build(path, id, 'payments'), {params:{query, page, pageSize}}),
-        createOfflineServiceChargePayment: (id: string, localAmount: number) => instance.post<ApiResponse<Payment>>(build(path, id, 'payments', 'service-charge', localAmount)),
+        createOfflineServiceChargePayment: (id: string, localAmount: number, paymentAccountId?: string) => instance.post<ApiResponse<Payment>>(build(path, id, 'payments', 'service-charge', localAmount), null, {params:{paymentAccountId}}),
         deleteResident: (id: string) => instance.delete<ApiResponse>(build(path, id)),
         offboardResident: (id: string) => instance.delete<ApiResponse>(build(path, id, 'offboard')),
     }
@@ -451,6 +468,8 @@ const utilities = () => {
         sendEmail: (emailDto: Mailing) => instance.post<ApiResponse>(build(path, 'mail'), emailDto),
         sendMessage: (messagingDto: Messaging) => instance.post<ApiResponse>(build(path, 'message'), messagingDto),
         readEmailTemplates: () => instance.get<ApiResponse<MailTemplate[]>>(build(path, 'mail-templates')),
+        migrateToPaymentAccounts: () => instance.post<ApiResponse>(build(path, 'migrate', 'payment-accounts')),
+        migrateToClaimsSystem: () => instance.post<ApiResponse>(build(path, 'migrate', 'claims')),
     }
 }
 

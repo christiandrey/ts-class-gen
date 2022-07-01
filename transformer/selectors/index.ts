@@ -17,7 +17,12 @@ function generateSelector(normalizationSchema: GeneratedNormalizationSchema): Ge
 	const {name, entitiesImports} = normalizationSchema;
 	const camelName = toCamelCase(name);
 	const combinedEntities = arrayUnique([name, ...entitiesImports]);
-	const stringifiedEntities = combinedEntities.map((o) => toCamelCase(getPlural(o))).join(', ');
+	const stringifiedEntities = combinedEntities
+		.map((o) =>
+			toCamelCase(o) === camelName ? toCamelCase(getPlural(o)) : `${toCamelCase(o)}Relations`,
+		)
+		.join(', ');
+	// const stringifiedEntities_ = combinedEntities.map((o) => toCamelCase(getPlural(o))).join(', ');
 	const typescriptEmitter = new TypeScriptEmitter();
 
 	enterEmitterScope(
@@ -26,10 +31,18 @@ function generateSelector(normalizationSchema: GeneratedNormalizationSchema): Ge
 	);
 
 	combinedEntities.forEach((o) => {
-		typescriptEmitter.writeLine(`${toCamelCase(o)}EntitiesSelector,`);
+		const relationCamelName = toCamelCase(o);
+		typescriptEmitter.writeLine(
+			`${toCamelCase(o)}${relationCamelName === camelName ? 'Entities' : 'Relations'}Selector,`,
+		);
 	});
 
-	typescriptEmitter.writeLine(`(${stringifiedEntities}) => ({${stringifiedEntities}}),`);
+	typescriptEmitter.writeLine(
+		`(${stringifiedEntities}) => ({${stringifiedEntities.replace(
+			/([a-zA-Z]*?Relations)/gim,
+			'...$1',
+		)}}),`,
+	);
 
 	leaveEmitterScope(typescriptEmitter, ');');
 

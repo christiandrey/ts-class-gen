@@ -6,6 +6,7 @@ import {Transaction} from './transaction';
 import {UserLite} from './user-lite';
 
 export class PaymentLite extends BaseEntity {
+    isEstateCredit: boolean;
     mode: PaymentMode;
     reference: string;
     evidenceUrl: string;
@@ -15,6 +16,7 @@ export class PaymentLite extends BaseEntity {
     estateId?: string;
     serviceCategoryId?: string;
     beneficiaryId?: string;
+    paymentAccountId?: string;
     serviceCategory: ServiceCategory;
     beneficiary: PaymentBeneficiary;
     user: UserLite;
@@ -24,6 +26,7 @@ export class PaymentLite extends BaseEntity {
     constructor(dto: PaymentLite) {
         super(dto);
 
+        this.isEstateCredit = dto.isEstateCredit;
         this.mode = dto.mode;
         this.reference = dto.reference;
         this.evidenceUrl = dto.evidenceUrl;
@@ -33,6 +36,7 @@ export class PaymentLite extends BaseEntity {
         this.estateId = dto.estateId;
         this.serviceCategoryId = dto.serviceCategoryId;
         this.beneficiaryId = dto.beneficiaryId;
+        this.paymentAccountId = dto.paymentAccountId;
         this.serviceCategory = new ServiceCategory(dto.serviceCategory);
         this.beneficiary = new PaymentBeneficiary(dto.beneficiary);
         this.user = new UserLite(dto.user);

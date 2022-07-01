@@ -15,6 +15,15 @@ export const createOrganization = createTypedAsyncThunk(
     },
 );
 
+export const deleteClaimOrganization = createTypedAsyncThunk(
+    'organizations/deleteClaimOrganization',
+    async (params: {id: string; claimId: string}) => {
+        const {id, claimId} = params;
+        const response = await api.organizations().deleteClaim(id, claimId);
+        return response;
+    },
+);
+
 export const fetchCurrentOrganization = createTypedAsyncThunk(
     'organizations/fetchCurrentOrganization',
     async () => {

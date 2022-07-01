@@ -1,5 +1,6 @@
 import {EstateEntities, estateSchema} from './estate';
-import {MemberEntities, memberSchema} from './member';
+import {EstateManagerEntities, estateManagerSchema} from './estate-manager';
+import {PaymentAccountEntities, paymentAccountSchema} from './payment-account';
 import {PaymentBeneficiaryEntities, paymentBeneficiarySchema} from './payment-beneficiary';
 import {ServiceCategoryEntities, serviceCategorySchema} from './service-category';
 import {UserEntities, userSchema} from './user';
@@ -13,9 +14,10 @@ export const paymentRequestSchema = new schema.Entity('paymentRequests', {
     recipient: userSchema,
     serviceCategory: serviceCategorySchema,
     beneficiary: paymentBeneficiarySchema,
-    member: memberSchema,
+    paymentAccount: paymentAccountSchema,
+    estateManager: estateManagerSchema,
 });
 
 export type PaymentRequestEntities = SchemaEntities<{
     paymentRequest: PaymentRequest;
-}> & EstateEntities & UserEntities & ServiceCategoryEntities & PaymentBeneficiaryEntities & MemberEntities;
+}> & EstateEntities & UserEntities & ServiceCategoryEntities & PaymentBeneficiaryEntities & PaymentAccountEntities & EstateManagerEntities;
