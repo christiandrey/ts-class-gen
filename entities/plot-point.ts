@@ -1,5 +1,5 @@
 export class PlotPoint {
-    label: number;
+    label: string;
     value: number;
 
     constructor(dto: PlotPoint) {

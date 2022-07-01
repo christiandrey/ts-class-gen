@@ -1,4 +1,4 @@
-namespace HealthGyro.Models.Enums
+namespace Caretaker.Models.Enums
 {
    public enum EmailTemplateType
    {
@@ -7,8 +7,17 @@ namespace HealthGyro.Models.Enums
       ForgotPassword,
       ResidentInvitation,
       VendorInvitation,
+      BeneficiaryWithdrawRequest,
+      WithdrawRequest,
       WithdrawalSuccessful,
       WithdrawalFailed,
+      ExistingResidentOnboarded,
+      ResidentOnboarded,
+      ResidentsOnboarded,
+      MemberCreated,
+      LowMessagingProviderBalance,
+      LowPaymentsProviderBalance,
+      PaymentRequestCreated,
       DefaultAction
    }
 }

@@ -5,6 +5,7 @@ export class Notification {
     createdAt: string;
     title: string;
     body: string;
+    extraData: string;
     type: NotificationType;
     dataId?: string;
     dataParentId?: string;
@@ -16,6 +17,7 @@ export class Notification {
         this.createdAt = dto.createdAt;
         this.title = dto.title;
         this.body = dto.body;
+        this.extraData = dto.extraData;
         this.type = dto.type;
         this.dataId = dto.dataId;
         this.dataParentId = dto.dataParentId;

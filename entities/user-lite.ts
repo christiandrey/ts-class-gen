@@ -1,33 +1,28 @@
 import {Gender} from '../typings';
+import {UserSummary} from './user-summary';
 
-export class UserLite {
-    id: string;
-    createdAt: string;
-    email: string;
+export class UserLite extends UserSummary {
+    name: string;
     firstName: string;
     lastName: string;
+    userName: string;
     fullName: string;
     imageUrl: string;
+    address: string;
     gender: Gender;
-    phoneNumber: string;
     isActive: boolean;
-    emailConfirmed: boolean;
-    accountSetup: boolean;
-    roleNames: Array<string>;
 
     constructor(dto: UserLite) {
-        this.id = dto.id;
-        this.createdAt = dto.createdAt;
-        this.email = dto.email;
+        super(dto);
+
+        this.name = dto.name;
         this.firstName = dto.firstName;
         this.lastName = dto.lastName;
+        this.userName = dto.userName;
         this.fullName = dto.fullName;
         this.imageUrl = dto.imageUrl;
+        this.address = dto.address;
         this.gender = dto.gender;
-        this.phoneNumber = dto.phoneNumber;
         this.isActive = dto.isActive;
-        this.emailConfirmed = dto.emailConfirmed;
-        this.accountSetup = dto.accountSetup;
-        this.roleNames = dto.roleNames;
     }
 }

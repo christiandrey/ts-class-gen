@@ -1,23 +1,26 @@
 import {TransactionMode} from '../typings';
-import {BaseEntity} from './base-entity';
-import {PatientLite} from './patient-lite';
+import {UserLite} from './user-lite';
 
-export class Transaction extends BaseEntity {
+export class Transaction {
+    id: string;
     isCredit: boolean;
     amount: number;
     reference: string;
+    estateId?: string;
     mode: TransactionMode;
     description: string;
-    patient: PatientLite;
+    createdAt: string;
+    user: UserLite;
 
     constructor(dto: Transaction) {
-        super(dto);
-
+        this.id = dto.id;
         this.isCredit = dto.isCredit;
         this.amount = dto.amount;
         this.reference = dto.reference;
+        this.estateId = dto.estateId;
         this.mode = dto.mode;
         this.description = dto.description;
-        this.patient = new PatientLite(dto.patient);
+        this.createdAt = dto.createdAt;
+        this.user = new UserLite(dto.user);
     }
 }

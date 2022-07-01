@@ -1,50 +1,49 @@
-import {activityLogEntitiesSelector, appointmentEntitiesSelector, billingItemEntitiesSelector, calendarEventEntitiesSelector, chatEntitiesSelector, chatMessageEntitiesSelector, clinicalVisitEntitiesSelector, countryEntitiesSelector, currencyEntitiesSelector, dataRangeEntitiesSelector, dischargeSummaryEntitiesSelector, encounterEntitiesSelector, faqEntitiesSelector, faqCategoryEntitiesSelector, fluidReadingEntitiesSelector, guestEntitiesSelector, hospitalEntitiesSelector, invoiceEntitiesSelector, invoiceItemEntitiesSelector, labScanEntitiesSelector, labTestEntitiesSelector, labTestResultEntitiesSelector, logEntitiesSelector, managerEntitiesSelector, medicEntitiesSelector, medicationEntitiesSelector, nonMedicEntitiesSelector, notificationEntitiesSelector, patientEntitiesSelector, patientBiodataEntitiesSelector, patientSocialHistoryEntitiesSelector, paymentPlanEntitiesSelector, planSubscriptionEntitiesSelector, roleEntitiesSelector, serviceCategoryEntitiesSelector, settingEntitiesSelector, stateEntitiesSelector, transactionEntitiesSelector, userEntitiesSelector, vitalReadingEntitiesSelector} from '../../data/adapters'
+import {adminRecurringPaymentEntitiesSelector, adminWithdrawalEntitiesSelector, apartmentEntitiesSelector, apartmentTypeEntitiesSelector, bankAccountEntitiesSelector, cardEntitiesSelector, communityCategoryEntitiesSelector, communityCommentEntitiesSelector, communityTopicEntitiesSelector, countryEntitiesSelector, currencyEntitiesSelector, estateEntitiesSelector, estateWalletEntitiesSelector, facilityManagerEntitiesSelector, facilityManagerLogEntitiesSelector, faqEntitiesSelector, faqCategoryEntitiesSelector, ghostEntitiesSelector, locationEntitiesSelector, logEntitiesSelector, memberEntitiesSelector, memberPermissionEntitiesSelector, notificationEntitiesSelector, organizationEntitiesSelector, organizationWalletEntitiesSelector, ownerEntitiesSelector, paymentEntitiesSelector, paymentBeneficiaryEntitiesSelector, paymentRequestEntitiesSelector, projectEntitiesSelector, projectMessageEntitiesSelector, projectResourceEntitiesSelector, recurringPaymentEntitiesSelector, residentEntitiesSelector, residentInvitationEntitiesSelector, reviewEntitiesSelector, roleEntitiesSelector, serviceCategoryEntitiesSelector, serviceChargeLogEntitiesSelector, stateEntitiesSelector, transactionEntitiesSelector, userEntitiesSelector, userSummaryEntitiesSelector, vendorEntitiesSelector, vendorInvitationEntitiesSelector, walletEntitiesSelector, withdrawalEntitiesSelector} from '../../data/adapters'
 
 import {createSelector} from '@reduxjs/toolkit';
 
-export const activityLogRelationsSelector = createSelector(
-    activityLogEntitiesSelector,
+export const apartmentRelationsSelector = createSelector(
+    apartmentEntitiesSelector,
+    apartmentTypeEntitiesSelector,
+    estateEntitiesSelector,
+    ownerEntitiesSelector,
+    residentEntitiesSelector,
+    (apartments, apartmentTypes, estates, owners, residents) => ({apartments, apartmentTypes, estates, owners, residents}),
+);
+
+export const apartmentTypeRelationsSelector = createSelector(
+    apartmentTypeEntitiesSelector,
+    serviceCategoryEntitiesSelector,
+    (apartmentTypes, serviceCategories) => ({apartmentTypes, serviceCategories}),
+);
+
+export const bankAccountRelationsSelector = createSelector(
+    bankAccountEntitiesSelector,
+    (bankAccounts) => ({bankAccounts}),
+);
+
+export const cardRelationsSelector = createSelector(
+    cardEntitiesSelector,
+    currencyEntitiesSelector,
+    (cards, currencies) => ({cards, currencies}),
+);
+
+export const communityCategoryRelationsSelector = createSelector(
+    communityCategoryEntitiesSelector,
+    communityTopicEntitiesSelector,
+    (communityCategories, communityTopics) => ({communityCategories, communityTopics}),
+);
+
+export const communityCommentRelationsSelector = createSelector(
+    communityCommentEntitiesSelector,
     userEntitiesSelector,
-    (activityLogs, users) => ({activityLogs, users}),
+    (communityComments, users) => ({communityComments, users}),
 );
 
-export const appointmentRelationsSelector = createSelector(
-    appointmentEntitiesSelector,
-    calendarEventEntitiesSelector,
-    medicEntitiesSelector,
-    patientEntitiesSelector,
-    (appointments, calendarEvents, medics, patients) => ({appointments, calendarEvents, medics, patients}),
-);
-
-export const billingItemRelationsSelector = createSelector(
-    billingItemEntitiesSelector,
-    (billingItems) => ({billingItems}),
-);
-
-export const calendarEventRelationsSelector = createSelector(
-    calendarEventEntitiesSelector,
+export const communityTopicRelationsSelector = createSelector(
+    communityTopicEntitiesSelector,
     userEntitiesSelector,
-    (calendarEvents, users) => ({calendarEvents, users}),
-);
-
-export const chatRelationsSelector = createSelector(
-    chatEntitiesSelector,
-    chatMessageEntitiesSelector,
-    userEntitiesSelector,
-    (chats, chatMessages, users) => ({chats, chatMessages, users}),
-);
-
-export const chatMessageRelationsSelector = createSelector(
-    chatMessageEntitiesSelector,
-    userEntitiesSelector,
-    (chatMessages, users) => ({chatMessages, users}),
-);
-
-export const clinicalVisitRelationsSelector = createSelector(
-    clinicalVisitEntitiesSelector,
-    dischargeSummaryEntitiesSelector,
-    invoiceEntitiesSelector,
-    (clinicalVisits, dischargeSummaries, invoices) => ({clinicalVisits, dischargeSummaries, invoices}),
+    (communityTopics, users) => ({communityTopics, users}),
 );
 
 export const countryRelationsSelector = createSelector(
@@ -57,24 +56,30 @@ export const currencyRelationsSelector = createSelector(
     (currencies) => ({currencies}),
 );
 
-export const dataRangeRelationsSelector = createSelector(
-    dataRangeEntitiesSelector,
-    (dataRanges) => ({dataRanges}),
+export const estateRelationsSelector = createSelector(
+    apartmentTypeEntitiesSelector,
+    estateEntitiesSelector,
+    facilityManagerEntitiesSelector,
+    locationEntitiesSelector,
+    organizationEntitiesSelector,
+    serviceCategoryEntitiesSelector,
+    (apartmentTypes, estates, facilityManagers, locations, organizations, serviceCategories) => ({apartmentTypes, estates, facilityManagers, locations, organizations, serviceCategories}),
 );
 
-export const dischargeSummaryRelationsSelector = createSelector(
-    dischargeSummaryEntitiesSelector,
-    medicEntitiesSelector,
-    (dischargeSummaries, medics) => ({dischargeSummaries, medics}),
+export const estateWalletRelationsSelector = createSelector(
+    estateWalletEntitiesSelector,
+    (estateWallets) => ({estateWallets}),
 );
 
-export const encounterRelationsSelector = createSelector(
-    encounterEntitiesSelector,
-    labScanEntitiesSelector,
-    labTestEntitiesSelector,
-    medicEntitiesSelector,
-    vitalReadingEntitiesSelector,
-    (encounters, labScans, labTests, medics, vitalReadings) => ({encounters, labScans, labTests, medics, vitalReadings}),
+export const facilityManagerRelationsSelector = createSelector(
+    facilityManagerEntitiesSelector,
+    userEntitiesSelector,
+    (facilityManagers, users) => ({facilityManagers, users}),
+);
+
+export const facilityManagerLogRelationsSelector = createSelector(
+    facilityManagerLogEntitiesSelector,
+    (facilityManagerLogs) => ({facilityManagerLogs}),
 );
 
 export const faqCategoryRelationsSelector = createSelector(
@@ -88,55 +93,15 @@ export const faqRelationsSelector = createSelector(
     (faqs, faqCategories) => ({faqs, faqCategories}),
 );
 
-export const fluidReadingRelationsSelector = createSelector(
-    fluidReadingEntitiesSelector,
-    (fluidReadings) => ({fluidReadings}),
-);
-
-export const guestRelationsSelector = createSelector(
-    guestEntitiesSelector,
+export const ghostRelationsSelector = createSelector(
+    ghostEntitiesSelector,
     userEntitiesSelector,
-    (guests, users) => ({guests, users}),
+    (ghosts, users) => ({ghosts, users}),
 );
 
-export const hospitalRelationsSelector = createSelector(
-    countryEntitiesSelector,
-    hospitalEntitiesSelector,
-    stateEntitiesSelector,
-    (countries, hospitals, states) => ({countries, hospitals, states}),
-);
-
-export const invoiceRelationsSelector = createSelector(
-    invoiceEntitiesSelector,
-    invoiceItemEntitiesSelector,
-    nonMedicEntitiesSelector,
-    transactionEntitiesSelector,
-    (invoices, invoiceItems, nonMedics, transactions) => ({invoices, invoiceItems, nonMedics, transactions}),
-);
-
-export const invoiceItemRelationsSelector = createSelector(
-    invoiceItemEntitiesSelector,
-    medicEntitiesSelector,
-    (invoiceItems, medics) => ({invoiceItems, medics}),
-);
-
-export const labScanRelationsSelector = createSelector(
-    labScanEntitiesSelector,
-    medicEntitiesSelector,
-    nonMedicEntitiesSelector,
-    (labScans, medics, nonMedics) => ({labScans, medics, nonMedics}),
-);
-
-export const labTestRelationsSelector = createSelector(
-    labTestEntitiesSelector,
-    labTestResultEntitiesSelector,
-    (labTests, labTestResults) => ({labTests, labTestResults}),
-);
-
-export const labTestResultRelationsSelector = createSelector(
-    labTestResultEntitiesSelector,
-    nonMedicEntitiesSelector,
-    (labTestResults, nonMedics) => ({labTestResults, nonMedics}),
+export const locationRelationsSelector = createSelector(
+    locationEntitiesSelector,
+    (locations) => ({locations}),
 );
 
 export const logRelationsSelector = createSelector(
@@ -144,32 +109,16 @@ export const logRelationsSelector = createSelector(
     (logs) => ({logs}),
 );
 
-export const managerRelationsSelector = createSelector(
-    hospitalEntitiesSelector,
-    managerEntitiesSelector,
-    userEntitiesSelector,
-    (hospitals, managers, users) => ({hospitals, managers, users}),
+export const memberRelationsSelector = createSelector(
+    facilityManagerEntitiesSelector,
+    memberEntitiesSelector,
+    memberPermissionEntitiesSelector,
+    (facilityManagers, members, memberPermissions) => ({facilityManagers, members, memberPermissions}),
 );
 
-export const medicRelationsSelector = createSelector(
-    hospitalEntitiesSelector,
-    medicEntitiesSelector,
-    serviceCategoryEntitiesSelector,
-    userEntitiesSelector,
-    (hospitals, medics, serviceCategories, users) => ({hospitals, medics, serviceCategories, users}),
-);
-
-export const medicationRelationsSelector = createSelector(
-    medicEntitiesSelector,
-    medicationEntitiesSelector,
-    (medics, medications) => ({medics, medications}),
-);
-
-export const nonMedicRelationsSelector = createSelector(
-    hospitalEntitiesSelector,
-    nonMedicEntitiesSelector,
-    userEntitiesSelector,
-    (hospitals, nonMedics, users) => ({hospitals, nonMedics, users}),
+export const memberPermissionRelationsSelector = createSelector(
+    memberPermissionEntitiesSelector,
+    (memberPermissions) => ({memberPermissions}),
 );
 
 export const notificationRelationsSelector = createSelector(
@@ -177,34 +126,104 @@ export const notificationRelationsSelector = createSelector(
     (notifications) => ({notifications}),
 );
 
-export const patientBiodataRelationsSelector = createSelector(
-    patientBiodataEntitiesSelector,
-    (patientBiodatas) => ({patientBiodatas}),
+export const organizationRelationsSelector = createSelector(
+    memberEntitiesSelector,
+    organizationEntitiesSelector,
+    (members, organizations) => ({members, organizations}),
 );
 
-export const patientRelationsSelector = createSelector(
-    countryEntitiesSelector,
-    patientEntitiesSelector,
-    patientBiodataEntitiesSelector,
-    patientSocialHistoryEntitiesSelector,
-    stateEntitiesSelector,
+export const organizationWalletRelationsSelector = createSelector(
+    organizationWalletEntitiesSelector,
+    (organizationWallets) => ({organizationWallets}),
+);
+
+export const ownerRelationsSelector = createSelector(
+    ownerEntitiesSelector,
     userEntitiesSelector,
-    (countries, patients, patientBiodatas, patientSocialHistories, states, users) => ({countries, patients, patientBiodatas, patientSocialHistories, states, users}),
+    (owners, users) => ({owners, users}),
 );
 
-export const patientSocialHistoryRelationsSelector = createSelector(
-    patientSocialHistoryEntitiesSelector,
-    (patientSocialHistories) => ({patientSocialHistories}),
+export const paymentBeneficiaryRelationsSelector = createSelector(
+    paymentBeneficiaryEntitiesSelector,
+    (paymentBeneficiaries) => ({paymentBeneficiaries}),
 );
 
-export const paymentPlanRelationsSelector = createSelector(
-    paymentPlanEntitiesSelector,
-    (paymentPlans) => ({paymentPlans}),
+export const paymentRelationsSelector = createSelector(
+    estateEntitiesSelector,
+    paymentEntitiesSelector,
+    paymentBeneficiaryEntitiesSelector,
+    serviceCategoryEntitiesSelector,
+    transactionEntitiesSelector,
+    userEntitiesSelector,
+    (estates, payments, paymentBeneficiaries, serviceCategories, transactions, users) => ({estates, payments, paymentBeneficiaries, serviceCategories, transactions, users}),
 );
 
-export const planSubscriptionRelationsSelector = createSelector(
-    planSubscriptionEntitiesSelector,
-    (planSubscriptions) => ({planSubscriptions}),
+export const paymentRequestRelationsSelector = createSelector(
+    estateEntitiesSelector,
+    memberEntitiesSelector,
+    paymentBeneficiaryEntitiesSelector,
+    paymentRequestEntitiesSelector,
+    serviceCategoryEntitiesSelector,
+    userEntitiesSelector,
+    (estates, members, paymentBeneficiaries, paymentRequests, serviceCategories, users) => ({estates, members, paymentBeneficiaries, paymentRequests, serviceCategories, users}),
+);
+
+export const projectRelationsSelector = createSelector(
+    estateEntitiesSelector,
+    paymentEntitiesSelector,
+    projectEntitiesSelector,
+    projectResourceEntitiesSelector,
+    residentEntitiesSelector,
+    serviceCategoryEntitiesSelector,
+    vendorEntitiesSelector,
+    (estates, payments, projects, projectResources, residents, serviceCategories, vendors) => ({estates, payments, projects, projectResources, residents, serviceCategories, vendors}),
+);
+
+export const projectMessageRelationsSelector = createSelector(
+    projectMessageEntitiesSelector,
+    (projectMessages) => ({projectMessages}),
+);
+
+export const projectResourceRelationsSelector = createSelector(
+    projectResourceEntitiesSelector,
+    (projectResources) => ({projectResources}),
+);
+
+export const recurringPaymentRelationsSelector = createSelector(
+    currencyEntitiesSelector,
+    paymentBeneficiaryEntitiesSelector,
+    recurringPaymentEntitiesSelector,
+    serviceCategoryEntitiesSelector,
+    userEntitiesSelector,
+    (currencies, paymentBeneficiaries, recurringPayments, serviceCategories, users) => ({currencies, paymentBeneficiaries, recurringPayments, serviceCategories, users}),
+);
+
+export const adminRecurringPaymentRelationsSelector = createSelector(
+    adminRecurringPaymentEntitiesSelector,
+    currencyEntitiesSelector,
+    estateEntitiesSelector,
+    paymentBeneficiaryEntitiesSelector,
+    serviceCategoryEntitiesSelector,
+    userEntitiesSelector,
+    (adminRecurringPayments, currencies, estates, paymentBeneficiaries, serviceCategories, users) => ({adminRecurringPayments, currencies, estates, paymentBeneficiaries, serviceCategories, users}),
+);
+
+export const residentRelationsSelector = createSelector(
+    residentEntitiesSelector,
+    serviceChargeLogEntitiesSelector,
+    userEntitiesSelector,
+    (residents, serviceChargeLogs, users) => ({residents, serviceChargeLogs, users}),
+);
+
+export const residentInvitationRelationsSelector = createSelector(
+    residentInvitationEntitiesSelector,
+    (residentInvitations) => ({residentInvitations}),
+);
+
+export const reviewRelationsSelector = createSelector(
+    reviewEntitiesSelector,
+    userEntitiesSelector,
+    (reviews, users) => ({reviews, users}),
 );
 
 export const roleRelationsSelector = createSelector(
@@ -217,9 +236,9 @@ export const serviceCategoryRelationsSelector = createSelector(
     (serviceCategories) => ({serviceCategories}),
 );
 
-export const settingRelationsSelector = createSelector(
-    settingEntitiesSelector,
-    (settings) => ({settings}),
+export const serviceChargeLogRelationsSelector = createSelector(
+    serviceChargeLogEntitiesSelector,
+    (serviceChargeLogs) => ({serviceChargeLogs}),
 );
 
 export const stateRelationsSelector = createSelector(
@@ -228,18 +247,42 @@ export const stateRelationsSelector = createSelector(
 );
 
 export const transactionRelationsSelector = createSelector(
-    patientEntitiesSelector,
     transactionEntitiesSelector,
-    (patients, transactions) => ({patients, transactions}),
-);
-
-export const userRelationsSelector = createSelector(
-    roleEntitiesSelector,
     userEntitiesSelector,
-    (roles, users) => ({roles, users}),
+    (transactions, users) => ({transactions, users}),
 );
 
-export const vitalReadingRelationsSelector = createSelector(
-    vitalReadingEntitiesSelector,
-    (vitalReadings) => ({vitalReadings}),
+export const userSummaryRelationsSelector = createSelector(
+    userSummaryEntitiesSelector,
+    (userSummaries) => ({userSummaries}),
+);
+
+export const vendorRelationsSelector = createSelector(
+    estateEntitiesSelector,
+    serviceCategoryEntitiesSelector,
+    userEntitiesSelector,
+    vendorEntitiesSelector,
+    (estates, serviceCategories, users, vendors) => ({estates, serviceCategories, users, vendors}),
+);
+
+export const vendorInvitationRelationsSelector = createSelector(
+    vendorInvitationEntitiesSelector,
+    (vendorInvitations) => ({vendorInvitations}),
+);
+
+export const walletRelationsSelector = createSelector(
+    walletEntitiesSelector,
+    (wallets) => ({wallets}),
+);
+
+export const withdrawalRelationsSelector = createSelector(
+    withdrawalEntitiesSelector,
+    (withdrawals) => ({withdrawals}),
+);
+
+export const adminWithdrawalRelationsSelector = createSelector(
+    adminWithdrawalEntitiesSelector,
+    estateEntitiesSelector,
+    userEntitiesSelector,
+    (adminWithdrawals, estates, users) => ({adminWithdrawals, estates, users}),
 );

@@ -1,13 +1,14 @@
-﻿namespace HealthGyro.Models.Enums
+﻿namespace Caretaker.Models.Enums
 {
    public enum UserRoleType
    {
       User,
       Admin,
-      Patient,
-      Guest,
-      Manager,
-      Medic,
-      NonMedic
+      Support,
+      FacilityManager,
+      Vendor,
+      Resident,
+      Owner,
+      Ghost
    }
 }

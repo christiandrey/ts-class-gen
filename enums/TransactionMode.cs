@@ -1,11 +1,11 @@
-﻿namespace HealthGyro.Models.Enums
+﻿namespace Caretaker.Models.Enums
 {
    public enum TransactionMode
    {
       None,
-      BankTransfer,
       Card,
+      BankTransfer,
       Cash,
-      Insurance
+      Wallet,
    }
 }

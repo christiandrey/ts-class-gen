@@ -1,0 +1,19 @@
+import {approvePaymentRequest, assignVendorProject, createApartment, createEstate, createMemberForOrganization, createOfflineServiceChargePaymentForResident, createOrganization, createPaymentForEstate, createPaymentRequestForEstate, createProject, createVendor, fetchAllApartment, fetchAllEstate, fetchAllProject, fetchAllVendor, fetchApartmentById, fetchApartmentsByEstate, fetchCurrentApartment, fetchCurrentMember, fetchCurrentOrganization, fetchCurrentVendor, fetchEstateById, fetchEstatesByFacilityManager, fetchEstatesByOrganization, fetchFacilityManagerEstatesByFacilityManager, fetchMemberById, fetchOrganizationById, fetchPaymentRequestById, fetchPaymentRequestsByEstate, fetchPaymentRequestsByMember, fetchPaymentRequestsByOrganization, fetchPaymentsByEstate, fetchPaymentsByResident, fetchProjectById, fetchProjectsByEstate, fetchProjectsByFacilityManager, fetchProjectsByResident, fetchProjectsByVendor, fetchPublicProjectsByEstate, fetchVendorById, fetchVendorsByEstate, fetchWithdrawalsByWithdrawal, inviteMemberForOrganization, makePaymentProject, rejectPaymentRequest, updateApartment, updateCommissionEstate, updateEstate, updateFacilityManagerEstate, updateOrganization, updatePaymentLimitMember, updatePermissionsMember, updateRoleMember, updateServicesEstate, updateStatusProject, updateVendorsEstate} from '../thunks';
+import {createSlice, isAnyOf} from '@reduxjs/toolkit';
+
+import membersAdapter from '../adapters/member';
+
+export const membersSlice = createSlice({
+    name: 'members',
+    initialState: membersAdapter.getInitialState(),
+    reducers: {},
+    extraReducers: (builder) => {
+        builder.addMatcher(isAnyOf(approvePaymentRequest.fulfilled, assignVendorProject.fulfilled, createApartment.fulfilled, createEstate.fulfilled, createMemberForOrganization.fulfilled, createOfflineServiceChargePaymentForResident.fulfilled, createOrganization.fulfilled, createPaymentForEstate.fulfilled, createPaymentRequestForEstate.fulfilled, createProject.fulfilled, createVendor.fulfilled, fetchAllApartment.fulfilled, fetchAllEstate.fulfilled, fetchAllProject.fulfilled, fetchAllVendor.fulfilled, fetchApartmentById.fulfilled, fetchApartmentsByEstate.fulfilled, fetchCurrentApartment.fulfilled, fetchCurrentMember.fulfilled, fetchCurrentOrganization.fulfilled, fetchCurrentVendor.fulfilled, fetchEstateById.fulfilled, fetchEstatesByFacilityManager.fulfilled, fetchEstatesByOrganization.fulfilled, fetchFacilityManagerEstatesByFacilityManager.fulfilled, fetchMemberById.fulfilled, fetchOrganizationById.fulfilled, fetchPaymentRequestById.fulfilled, fetchPaymentRequestsByEstate.fulfilled, fetchPaymentRequestsByMember.fulfilled, fetchPaymentRequestsByOrganization.fulfilled, fetchPaymentsByEstate.fulfilled, fetchPaymentsByResident.fulfilled, fetchProjectById.fulfilled, fetchProjectsByEstate.fulfilled, fetchProjectsByFacilityManager.fulfilled, fetchProjectsByResident.fulfilled, fetchProjectsByVendor.fulfilled, fetchPublicProjectsByEstate.fulfilled, fetchVendorById.fulfilled, fetchVendorsByEstate.fulfilled, fetchWithdrawalsByWithdrawal.fulfilled, inviteMemberForOrganization.fulfilled, makePaymentProject.fulfilled, rejectPaymentRequest.fulfilled, updateApartment.fulfilled, updateCommissionEstate.fulfilled, updateEstate.fulfilled, updateFacilityManagerEstate.fulfilled, updateOrganization.fulfilled, updatePaymentLimitMember.fulfilled, updatePermissionsMember.fulfilled, updateRoleMember.fulfilled, updateServicesEstate.fulfilled, updateStatusProject.fulfilled, updateVendorsEstate.fulfilled), (state, action) => {
+            membersAdapter.upsertMany(state, action.payload.entities.members);
+        });
+    },
+});
+
+export const membersReducer = membersSlice.reducer;
+
+export const membersActions = membersSlice.actions;

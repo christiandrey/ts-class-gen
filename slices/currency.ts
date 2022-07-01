@@ -1,4 +1,4 @@
-import {fetchCurrenciesCurrency, fetchCurrencyForCurrentRegion, updateCurrency} from '../thunks';
+import {createCard, fetchCards, fetchCurrenciesCurrency, fetchCurrencyForCurrentRegion, fetchRecurringPaymentsByEstate, updateCurrency} from '../thunks';
 import {createSlice, isAnyOf} from '@reduxjs/toolkit';
 
 import currenciesAdapter from '../adapters/currency';
@@ -8,7 +8,7 @@ export const currenciesSlice = createSlice({
     initialState: currenciesAdapter.getInitialState(),
     reducers: {},
     extraReducers: (builder) => {
-        builder.addMatcher(isAnyOf(fetchCurrenciesCurrency.fulfilled, fetchCurrencyForCurrentRegion.fulfilled, updateCurrency.fulfilled), (state, action) => {
+        builder.addMatcher(isAnyOf(createCard.fulfilled, fetchCards.fulfilled, fetchCurrenciesCurrency.fulfilled, fetchCurrencyForCurrentRegion.fulfilled, fetchRecurringPaymentsByEstate.fulfilled, updateCurrency.fulfilled), (state, action) => {
             currenciesAdapter.upsertMany(state, action.payload.entities.currencies);
         });
     },

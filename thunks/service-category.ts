@@ -5,16 +5,6 @@ import {createTypedAsyncThunk, safeNormalize} from '../../../utils/redux';
 import {ServiceCategory} from '../../../entities/service-category';
 import {api} from '../../../api';
 
-export const fetchServicesByHospital = createTypedAsyncThunk(
-    'serviceCategories/fetchServicesByHospital',
-    async (id: string) => {
-        const response = await api.hospitals().readServices(id);
-        const responseData = response.data.data.map((o) => new ServiceCategory(o));
-        const normalized = safeNormalize<ServiceCategory, ServiceCategoryEntities, Array<string>>(responseData, [serviceCategorySchema]);
-        return normalized;
-    },
-);
-
 export const fetchServiceCategory = createTypedAsyncThunk(
     'serviceCategories/fetchServiceCategory',
     async () => {

@@ -24,14 +24,3 @@ export const updateRole = createTypedAsyncThunk(
         return normalized;
     },
 );
-
-export const updateRolesByUser = createTypedAsyncThunk(
-    'roles/updateRolesByUser',
-    async (params: {userId: string; roles: Array<UserRoleType>}) => {
-        const {userId, roles} = params;
-        const response = await api.users().updateRoles(userId, roles);
-        const responseData = response.data.data.map((o) => new Role(o));
-        const normalized = safeNormalize<Role, RoleEntities, Array<string>>(responseData, [roleSchema]);
-        return normalized;
-    },
-);

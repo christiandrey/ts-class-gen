@@ -1,101 +1,92 @@
-import {AppointmentStatus, AvpuScale, CalendarEventType, FluidReadingRoute, FluidReadingType, FluidReadingUnit, LabTestType, MedicationFrequency, MessageType, PaymentGateway, PaymentRecurrence, TimeDuration, TransactionMode} from '.';
+import {ApportionmentType, BankAccountType, CommissionType, MemberRoleType, MessageType, PaymentMode, Recurrence, ResourceType} from '.';
 
-export type AppointmentCreationOptions = {
-    medicId: string;
-    startAt: string;
-    endAt: string;
+export type ApartmentCreationOptions = {
+    label: string;
+    ownerId?: string;
+    estateId?: string;
+    typeId: string;
 }
 
-export type AppointmentStatusUpdateOptions = {
-    status: AppointmentStatus;
-}
-
-export type BillingItemCreationOptions = {
+export type ApartmentTypeCreationOptions = {
     name: string;
+    quantity: number;
     description: string;
-    localUnitPrice: number;
+    serviceChargeAmount: number;
+    serviceChargeRecurrence: Recurrence;
+    bedrooms: number;
+    size: number;
+    estateId?: string;
+    servicesIds: Array<string>;
 }
 
-export type BillingItemUpdateOptions = {
+export type ApartmentTypeUpdateOptions = {
     name: string;
+    quantity?: number;
     description: string;
-    localUnitPrice?: number;
+    serviceChargeAmount?: number;
+    serviceChargeRecurrence?: Recurrence;
+    bedrooms?: number;
+    size?: number;
 }
 
-export type CalendarEventCreationOptions = {
-    title: string;
-    type: CalendarEventType;
-    startAt: string;
-    endAt: string;
-    participantsIds: Array<string>;
+export type ApartmentUpdateOptions = {
+    label: string;
+    typeId?: string;
+    isNotInUse?: boolean;
 }
 
-export type CalendarEventUpdateOptions = {
-    title: string;
-    startAt?: string;
-    endAt?: string;
+export type BankAccountCreationOptions = {
+    accountName: string;
+    accountNumber: string;
+    type: BankAccountType;
+    bankName: string;
+    bankCode: string;
 }
 
-export type ChatMessageCreationOptions = {
+export type CardCreationOptions = {
+    bin: string;
+    token: string;
+    withdrawToken: string;
+    reference: string;
+}
+
+export type CommissionUpdateOptions = {
+    commissionType: CommissionType;
+    commission: number;
+}
+
+export type CommunityCategoryCreationOptions = {
+    name: string;
+    color: string;
+}
+
+export type CommunityCommentCreationOptions = {
     body: string;
     hash: string;
-    type: MessageType;
 }
 
-export type DataRangeCreationOptions = {
+export type CommunityTopicCreationOptions = {
     name: string;
-    lowerValue: number;
-    upperValue: number;
-    unit: string;
+    description: string;
+    categoryId: string;
+    estateId: string;
 }
 
-export type DataRangeUpdateOptions = {
+export type EstateCreationOptions = {
     name: string;
-    lowerValue?: number;
-    upperValue?: number;
-    unit: string;
+    placeId: string;
+    imageUrl: string;
+    apportionmentType: ApportionmentType;
+    servicesIds: Array<string>;
 }
 
-export type DischargeSummaryCreationOptions = {
-    dischargedAt?: string;
-    presentingComplaints: string;
-    complaintHistory: string;
-    investigations: string;
-    diagnoses: string;
-    management: string;
-    complications: string;
-    operations: string;
-    futureManagement: string;
-}
-
-export type EncounterCreationOptions = {
-    presentingComplaint: string;
-    complaintHistory: string;
-    weightInKg: number;
-    heightInCm: number;
-    cardiovascularSystem: string;
-    respiratorySystem: string;
-    gastrointestinalSystem: string;
-    genitounirarySystem: string;
-    neurologicalSystem: string;
-    diagnosis: string;
-    management: string;
-    notes: string;
-}
-
-export type EncounterUpdateOptions = {
-    presentingComplaint: string;
-    complaintHistory: string;
-    weightInKg?: number;
-    heightInCm?: number;
-    cardiovascularSystem: string;
-    respiratorySystem: string;
-    gastrointestinalSystem: string;
-    genitounirarySystem: string;
-    neurologicalSystem: string;
-    diagnosis: string;
-    management: string;
-    notes: string;
+export type EstateUpdateOptions = {
+    name: string;
+    placeId: string;
+    imageUrl: string;
+    apportionmentType?: ApportionmentType;
+    concealResidentNames?: boolean;
+    unavailableServicesWhenVacant: Array<string>;
 }
 
 export type FaqCategoryCreationOptions = {
@@ -109,245 +100,121 @@ export type FaqCreationOptions = {
     faqCategoryId: string;
 }
 
-export type FluidReadingCreationOptions = {
-    recordedAt?: string;
-    type: FluidReadingType;
-    route: FluidReadingRoute;
-    unit: FluidReadingUnit;
-    quantity: number;
-}
-
-export type GuestCreationOptions = {
-    email: string;
-    firstName: string;
-    lastName: string;
-    accessExpiresAt?: string;
-    canAccessFinances: boolean;
-    canAccessMedication: boolean;
-    canAccessAppointments: boolean;
-    canAccessLabResults: boolean;
-}
-
-export type GuestUpdateOptions = {
-    accessExpiresAt?: string;
-    canAccessAppointments?: boolean;
-    canAccessFinances?: boolean;
-    canAccessLabResults?: boolean;
-    canAccessMedication?: boolean;
-}
-
-export type HospitalCreationOptions = {
+export type MemberCreationOptions = {
+    username: string;
     name: string;
-    imageUrl: string;
-    addressLine1: string;
-    addressLine2: string;
-    stateId: string;
-    countryId: string;
-    managerEmail: string;
-    managerFirstName: string;
-    managerLastName: string;
-    servicesIds: Array<string>;
+    isAdmin: boolean;
+    canOffboardResident: boolean;
+    canOnboardResident: boolean;
+    canAddNewApartment: boolean;
 }
 
-export type HospitalStatsOptions = {
-    timeDuration: TimeDuration;
-    startDate: string;
+export type MemberInvitationOptions = {
+    facilityManagerId: string;
+    isAdmin: boolean;
+    canOffboardResident: boolean;
+    canOnboardResident: boolean;
+    canAddNewApartment: boolean;
 }
 
-export type HospitalUpdateOptions = {
+export type MemberPermissionUpdateOptions = {
+    canOffboardResident?: boolean;
+    canOnboardResident?: boolean;
+    canAddNewApartment?: boolean;
+}
+
+export type MemberRoleTypeUpdateOptions = {
+    role: MemberRoleType;
+}
+
+export type OrganizationCreationOptions = {
     name: string;
-    imageUrl: string;
-    addressLine1: string;
-    addressLine2: string;
-    stateId?: string;
-    countryId?: string;
 }
 
-export type InvoiceCreationOptions = {
-    items: Array<InvoiceItemCreationOptions>;
+export type OrganizationUpdateOptions = {
+    name: string;
 }
 
-export type InvoiceItemCreationOptions = {
-    billingItemId: string;
-    quantity: number;
+export type PaymentBeneficiaryCreationOptions = {
+    accountName: string;
+    accountNumber: string;
+    bankName: string;
+    bankCode: string;
 }
 
-export type InvoiceSettleOptions = {
+export type PaymentCreationOptions = {
+    recipientId: string;
+    bankAccountId?: string;
     localAmount: number;
-    mode: TransactionMode;
-}
-
-export type LabScanCreationOptions = {
-    url: string;
-    previewUrl: string;
-}
-
-export type LabScanUpdateOptions = {
-    notes: string;
-}
-
-export type LabTestCreationOptions = {
-    results: Array<LabTestResultCreationOptions>;
-}
-
-export type LabTestResultCreationOptions = {
-    type: LabTestType;
     description: string;
+    notes: string;
+    mode: PaymentMode;
+    recurrence: Recurrence;
+    recurrenceStartAt?: string;
 }
 
-export type LabTestResultUpdateOptions = {
-    data: string;
+export type PaymentUpdateOptions = {
+    evidenceUrl: string;
 }
 
-export type ManagerCreationOptions = {
+export type ProjectCreationOptions = {
+    title: string;
+    description: string;
+    isMaintenance: boolean;
+    isPublic: boolean;
+    dueDate?: string;
+    vendorId?: string;
+    categoryId: string;
+    resources: Array<ProjectResourceCreationOptions>;
+}
+
+export type ProjectMessageCreationOptions = {
+    body: string;
+    hash: string;
+    type: MessageType;
+}
+
+export type ProjectResourceCreationOptions = {
+    notes: string;
+    url: string;
+    type: ResourceType;
+}
+
+export type ResidentInvitationCreationOptions = {
     email: string;
-    firstName: string;
-    lastName: string;
+    houseNumber: string;
+    serviceChargeDueDate?: string;
+    apartmentTypeId?: string;
+    apartmentId?: string;
 }
 
-export type ManagerUpdateOptions = {
-    designation: string;
+export type ResidentUpdateOptions = {
+    houseNumber: string;
+    serviceChargeDueDate?: string;
 }
 
-export type MedicCreationOptions = {
-    email: string;
-    firstName: string;
-    lastName: string;
-    designation: string;
-    registrationNumber: string;
-    servicesIds: Array<string>;
-}
-
-export type MedicUpdateOptions = {
-    designation: string;
-    registrationNumber: string;
-}
-
-export type MedicationCreationOptions = {
-    name: string;
-    instructions: string;
-    dosage: string;
-    frequency: MedicationFrequency;
-    frequencyCount: number;
-    otherFrequency: string;
-    firstDoseAt: string;
-    lastDoseAt?: string;
-}
-
-export type NonMedicCreationOptions = {
-    email: string;
-    firstName: string;
-    lastName: string;
-    designation: string;
-}
-
-export type NonMedicUpdateOptions = {
-    designation: string;
-}
-
-export type PatientCreationOptions = {
-    email: string;
-    firstName: string;
-    lastName: string;
-    dateOfBirth: string;
-    addressLine1: string;
-    addressLine2: string;
-    stateId: string;
-    countryId: string;
-    biodata: PatientBiodataCreationOptions;
-    socialHistory: PatientSocialHistoryCreationOptions;
-}
-
-export type PatientBiodataCreationOptions = {
-    bloodGroup: string;
-    rhesusFactor: string;
-    genotype: string;
-    allergies: string;
-    alerts: string;
-    disabilities: string;
-    underlyingMedicalConditions: string;
-}
-
-export type PatientSocialHistoryCreationOptions = {
-    smoker: boolean;
-    smokingDuration: number;
-    smokingDurationUnit: TimeDuration;
-    dailySmokingFrequency: number;
-    occupation: string;
-}
-
-export type PatientUpdateOptions = {
-    dateOfBirth?: string;
-    addressLine1: string;
-    addressLine2: string;
-    stateId?: string;
-    countryId?: string;
-}
-
-export type PatientBiodataUpdateOptions = {
-    bloodGroup: string;
-    rhesusFactor: string;
-    genotype: string;
-    allergies: string;
-    alerts: string;
-    disabilities: string;
-    underlyingMedicalConditions: string;
-}
-
-export type PatientSocialHistoryUpdateOptions = {
-    smoker?: boolean;
-    smokingDuration?: number;
-    smokingDurationUnit?: TimeDuration;
-    dailySmokingFrequency?: number;
-    occupation: string;
-}
-
-export type PaymentPlanCreationOptions = {
-    name: string;
-    recurrence: PaymentRecurrence;
-    medics: number;
-    nonMedics: number;
-    localPrice: number;
-    localPricePerMedic: number;
-    localPricePerNonMedic: number;
-}
-
-export type PaymentPlanUpdateOptions = {
-    name: string;
-    recurrence?: PaymentRecurrence;
-    medics?: number;
-    nonMedics?: number;
-    localPrice?: number;
-    localPricePerMedic?: number;
-    localPricePerNonMedic?: number;
-}
-
-export type PlanSubscriptionCreationOptions = {
-    paymentPlanId: string;
-    transactionReference: string;
-    gateway: PaymentGateway;
+export type ReviewOptions = {
+    stars: number;
+    body: string;
 }
 
 export type ServiceCategoryCreationOptions = {
     name: string;
+    isPaymentOnly: boolean;
 }
 
-export type UserCreationOptions = {
-    lastName: string;
-    firstName: string;
+export type ServiceChargeUpdateOptions = {
+    serviceChargeAmount: number;
+    serviceChargeRecurrence?: Recurrence;
+    serviceChargeDueDate?: string;
+}
+
+export type VendorCreationOptions = {
+    servicesIds: Array<string>;
+}
+
+export type VendorInvitationCreationOptions = {
     email: string;
-}
-
-export type UserSetupOptions = {
-    password: string;
-}
-
-export type VitalReadingCreationOptions = {
-    pulse: number;
-    bloodPressureSystolic: number;
-    bloodPressureDiastolic: number;
-    respiratoryRate: number;
-    oxygenSaturation: number;
-    temperatureCelsius: number;
-    avpu: AvpuScale;
+    estateId: string;
+    servicesIds: Array<string>;
 }

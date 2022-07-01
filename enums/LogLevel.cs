@@ -1,4 +1,4 @@
-namespace HealthGyro.Models.Enums
+namespace Caretaker.Models.Enums
 {
    public enum LogLevel
    {
